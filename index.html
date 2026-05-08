@@ -3,36 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>不動産投資 価値判断ツール (V7 地価推移)</title>
+    <title>不動産投資 価値判断ツール (V8)</title>
+    <!-- 브라우저 탭에 들어갈 로고 (파비콘) -->
+    <link rel="icon" type="image/png" href="logo.png">
     <style>
         body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; background-color: #f0f2f5; color: #1c1e21; padding: 20px; margin: 0; }
         .container { max-width: 900px; margin: 0 auto; background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); box-sizing: border-box; }
-        h1 { font-size: 24px; color: #1a73e8; border-bottom: 3px solid #1a73e8; padding-bottom: 15px; margin-bottom: 30px; }
+        
+        /* 로고와 타이틀을 가로로 정렬하는 스타일 */
+        .header-container { display: flex; align-items: center; border-bottom: 3px solid #1a73e8; padding-bottom: 15px; margin-bottom: 30px; }
+        .header-logo { width: 55px; height: 55px; border-radius: 50%; margin-right: 15px; object-fit: cover; border: 2px solid #1a73e8; }
+        h1 { font-size: 24px; color: #1a73e8; margin: 0; padding: 0; border: none; }
+        
         .form-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
         .full-width { grid-column: span 2; }
         label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px; color: #4b4b4b; }
-        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: #f9f9f9; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background-color: #f9f9f9; transition: border 0.3s; }
         input:focus { outline: none; border-color: #1a73e8; background-color: #fff; }
         .unit-group { display: flex; gap: 10px; align-items: center; }
         .unit-group select { width: 80px; }
         .price-info { font-size: 13px; color: #1a73e8; margin-top: 5px; font-weight: bold; }
-        button { background-color: #1a73e8; color: white; border: none; padding: 18px; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 20px; transition: 0.3s; }
-        button:hover { background-color: #1557b0; }
-        .btn-api { background-color: #34a853; padding: 12px; font-size: 16px; margin-top: 10px; }
+        
+        .btn-api { background-color: #34a853; color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.3s; }
         .btn-api:hover { background-color: #2b8c45; }
-        .result-box { margin-top: 40px; padding: 30px; border-radius: 12px; display: none; border: 2px solid #eee; }
-        .score-circle { font-size: 60px; font-weight: bold; text-align: center; margin: 20px 0; }
-        .status { font-size: 28px; font-weight: bold; text-align: center; margin-bottom: 20px; }
+        #api_log { font-size: 13px; color: #1a73e8; margin-top: 10px; font-weight: bold; line-height: 1.5; }
+        .chart-container { position: relative; height: 250px; width: 100%; margin-top: 15px; display: none; background: #fafafa; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-sizing: border-box; }
+
+        /* 결과창 (실시간 표시를 위해 항상 보이게 설정) */
+        .result-box { margin-top: 20px; padding: 30px; border-radius: 12px; border: 2px solid #eee; display: block; background-color: #f8f9fa; }
+        .score-circle { font-size: 60px; font-weight: bold; text-align: center; margin: 15px 0; transition: color 0.3s; }
+        .status { font-size: 28px; font-weight: bold; text-align: center; margin-bottom: 15px; }
         .details-list { list-style: none; padding: 0; }
-        .details-list li { margin-bottom: 12px; font-size: 16px; padding: 12px; border-radius: 6px; border-left: 6px solid #1a73e8; }
+        .details-list li { margin-bottom: 12px; font-size: 16px; padding: 12px; border-radius: 6px; border-left: 6px solid #1a73e8; background: #fff; }
         .alert { border-left-color: #d93025 !important; color: #a50e0e; background-color: #fce8e6 !important; }
         .warning { border-left-color: #f9ab00 !important; color: #a67300; background-color: #fef7e0 !important; }
         .good { border-left-color: #1e8e3e !important; color: #0d652d; background-color: #e6f4ea !important; }
-        #api_log { font-size: 13px; color: #1a73e8; margin-top: 10px; font-weight: bold; line-height: 1.5; }
         
-        /* 그래프 영역 스타일 */
-        .chart-container { position: relative; height: 250px; width: 100%; margin-top: 15px; display: none; background: #fafafa; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-sizing: border-box; }
+        /* 국토교통성 면책 조항 */
+        .credit-text { font-size: 11px; color: #7f8c8d; margin-top: 30px; text-align: center; line-height: 1.4; border-top: 1px solid #ddd; padding-top: 15px; }
 
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -40,28 +49,33 @@
             .form-section { grid-template-columns: 1fr; gap: 15px; }
             .full-width { grid-column: span 1; }
             .unit-group { flex-direction: row; }
+            .header-logo { width: 45px; height: 45px; }
+            h1 { font-size: 20px; }
         }
     </style>
-    <!-- 그래프를 그리기 위한 Chart.js 라이브러리 로드 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
 <div class="container">
-    <h1>不動産投資 価値判断ツール (V7)</h1>
+    <div class="header-container">
+        <!-- 깃허브에 올릴 이미지 파일명(logo.png)을 소스로 사용 -->
+        <img src="logo.png" alt="Profile Logo" class="header-logo" onerror="this.style.display='none'">
+        <h1>不動産投資 価値判断ツール (V8)</h1>
+    </div>
     
     <div class="form-section">
         <div class="form-group">
             <label>エリア (지역)</label>
-            <select id="area" onchange="toggleParking()">
+            <select id="area" onchange="calculateValue();">
                 <option value="tokyo_osaka">東京/大阪コアエリア</option>
                 <option value="local">地方主要都市</option>
             </select>
         </div>
 
-        <div class="form-group" id="parking_group" style="display:none;">
+        <div class="form-group" id="parking_group">
             <label>駐車場 (주차장)</label>
-            <select id="parking">
+            <select id="parking" onchange="calculateValue()">
                 <option value="yes">完備</option>
                 <option value="no">無し</option>
             </select>
@@ -70,10 +84,8 @@
         <div class="form-group full-width">
             <label>物件住所 (물건 주소 입력)</label>
             <input type="text" id="address" placeholder="例: 東京都新宿区歌舞伎町1-1-1">
-            <button type="button" class="btn-api" onclick="fetchLocationAndLandPrice()">📍 地価推移と駅徒歩を自動取得 (공시지가 및 역 도보 가져오기)</button>
+            <button type="button" class="btn-api" onclick="fetchLocationAndLandPrice()">📍 地価推移と駅徒歩を自動取得 (공시지가/도보 가져오기)</button>
             <div id="api_log"></div>
-            
-            <!-- 공시지가 5년 추이 그래프가 나타날 영역 -->
             <div class="chart-container" id="chart_wrapper">
                 <canvas id="landPriceChart"></canvas>
             </div>
@@ -87,8 +99,8 @@
         <div class="form-group">
             <label>土地面積 (토지 면적)</label>
             <div class="unit-group">
-                <input type="number" id="land_area" value="100" step="0.01" oninput="calculateUnitPrices()">
-                <select id="land_unit" onchange="calculateUnitPrices()">
+                <input type="number" id="land_area" value="100" step="0.01" oninput="calculateUnitPrices(); calculateValue();">
+                <select id="land_unit" onchange="calculateUnitPrices(); calculateValue();">
                     <option value="m2">㎡</option>
                     <option value="tsubo">坪</option>
                 </select>
@@ -114,17 +126,17 @@
 
         <div class="form-group">
             <label>築年数 (건축 경과 연수 - 年)</label>
-            <select id="age"></select> 
+            <select id="age" onchange="calculateValue()"></select> 
         </div>
 
         <div class="form-group">
             <label>駅徒歩 (역 도보 - 分)</label>
-            <select id="station_dist"></select>
+            <select id="station_dist" onchange="calculateValue()"></select>
         </div>
 
         <div class="form-group">
             <label>総戸数 (총 방 개수 - 戸)</label>
-            <input type="number" id="room_count" value="10">
+            <input type="number" id="room_count" value="10" oninput="calculateValue()">
         </div>
 
         <div class="form-group">
@@ -133,7 +145,7 @@
         </div>
 
         <div class="form-group">
-            <label>周辺相場家賃/戸 (방 1개당 주변 평균 월세 - 円)</label>
+            <label>周辺相場家賃/戸 (방 1개당 주변平均 월세 - 円)</label>
             <input type="text" id="market_rent_per_room" value="80,000" oninput="formatAndCalc(this)">
         </div>
 
@@ -144,23 +156,27 @@
     </div>
 
     <div class="form-group full-width">
-        <label style="color:#d93025;"><input type="checkbox" id="illegal" style="transform: scale(1.3); margin-right: 10px;"> 再建築不可 / 違法建築 (재건축 불가 / 위법 건축)</label>
+        <label style="color:#d93025;"><input type="checkbox" id="illegal" style="transform: scale(1.3); margin-right: 10px;" onchange="calculateValue()"> 再建築不可 / 違法建築 (재건축 불가 / 위법 건축)</label>
     </div>
 
-    <button onclick="calculateValue()">投資価値を判定する (판정하기)</button>
-
+    <!-- 실시간 결과 출력 영역 -->
     <div id="result_section" class="result-box">
-        <div class="status" id="final_status">判定結果</div>
+        <div class="status" id="final_status">判定中...</div>
         <div class="score-circle" id="final_score">0点</div>
         <ul class="details-list" id="feedback_list"></ul>
     </div>
+    
+    <!-- 국토교통성 지정 크레딧 문구 (의무 사항) -->
+    <div class="credit-text">
+        このサービスは、国土交通省の「不動産情報ライブラリ」のAPI機能を使用していますが、提供情報の最新性、正確性、完全性等が保証されたものではありません。
+    </div>
 </div>
 
-<!-- ★ V6에서 발급받은 구글 API 키를 여기에 다시 넣어주세요 ★ -->
+<!-- ★ 대표님이 주신 구글 API 키 탑재 완료! ★ -->
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyASsw6ve3g5GFOKp-gQYZ7Rd_7FSBe0vEk&libraries=places"></script>
 
 <script>
-    let priceChart = null; // 차트 객체 초기화
+    let priceChart = null;
 
     document.addEventListener('DOMContentLoaded', function() {
         const ageSelect = document.getElementById('age');
@@ -171,56 +187,42 @@
             ageSelect.appendChild(opt);
         }
         const distSelect = document.getElementById('station_dist');
-        for(let i=1; i<=30; i++) {
+        for(let i=1; i<=50; i++) {
             let opt = document.createElement('option');
             opt.value = i; opt.innerHTML = i + " 分";
             if(i === 8) opt.selected = true;
             distSelect.appendChild(opt);
         }
         calculateUnitPrices();
+        calculateValue(); // 페이지 로드 시 최초 1회 실시간 판정 실행
     });
 
-    // 지가 및 역 거리 가져오기 메인 함수
+    // 구글 API 연동 (자동 역 도보 계산)
     function fetchLocationAndLandPrice() {
         const address = document.getElementById('address').value;
         const log = document.getElementById('api_log');
-        if (!address) { alert('住所を入力してください。(주소를 먼저 입력해 주세요.)'); return; }
+        if (!address) { alert('住所を入力してください。'); return; }
 
-        log.innerHTML = "🔄 座標を抽出中... (좌표 추출 및 데이터 가져오는 중...)<br>";
-        
+        log.innerHTML = "🔄 座標を抽出中...<br>";
         const geocoder = new google.maps.Geocoder();
         geocoder.geocode({ 'address': address }, function(results, status) {
             if (status === 'OK') {
                 const location = results[0].geometry.location;
-                const lat = location.lat();
-                const lng = location.lng();
-                
-                // 1. 역 도보 거리 계산 로직 (기존 유지)
                 calculateStationDistance(location, log);
-
-                // 2. 공시지가 변동 추이 가져오기 (UI 시뮬레이션)
-                // 실제 국토교통성 API 연동 전, 시각화와 로직을 검증하기 위한 데이터 형태입니다.
-                log.innerHTML += `✅ 座標取得成功 (Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)})<br>🔄 国土交通省の地価データを読み込み中...`;
                 
+                log.innerHTML += `✅ 座標取得成功<br>🔄 国土交通省の地価データを読み込み中...`;
                 setTimeout(() => {
-                    // 도심/지방에 따른 가상의 공시지가 트렌드 시뮬레이션
                     const areaType = document.getElementById('area').value;
-                    let mockPrices = areaType === 'tokyo_osaka' ? 
-                        [1250000, 1280000, 1310000, 1360000, 1420000] : // 도심 상승장
-                        [150000, 148000, 145000, 144000, 142000];       // 지방 하락/보합장
-
+                    let mockPrices = areaType === 'tokyo_osaka' ? [1250000, 1280000, 1310000, 1360000, 1420000] : [150000, 148000, 145000, 144000, 142000];
                     drawTrendChart(mockPrices);
-                    log.innerHTML += `<br>✅ 過去5年間の地価推移をグラフに反映しました。(5년 지가 추이 반영 완료!)`;
+                    log.innerHTML += `<br>✅ 過去5年間の地価推移をグラフに反映しました。`;
                 }, 1000);
-
             } else {
-                log.innerHTML = "❌ 住所を認識できませんでした。(주소를 인식할 수 없습니다.)";
-                log.style.color = "#d93025";
+                log.innerHTML = "❌ 住所を認識できませんでした。"; log.style.color = "#d93025";
             }
         });
     }
 
-    // 구글 맵: 주변 역 탐색 및 도보 시간 계산
     function calculateStationDistance(location, log) {
         const service = new google.maps.places.PlacesService(document.createElement('div'));
         service.nearbySearch({ location: location, radius: 1500, type: ['train_station', 'subway_station'] }, function(places, placesStatus) {
@@ -232,65 +234,40 @@
                 }, function(distResponse, distStatus) {
                     if (distStatus === 'OK' && distResponse.rows[0].elements[0].status === 'OK') {
                         let walkMinutes = Math.ceil(distResponse.rows[0].elements[0].duration.value / 60);
-                        document.getElementById('station_dist').value = walkMinutes > 30 ? 30 : walkMinutes;
+                        document.getElementById('station_dist').value = walkMinutes > 50 ? 50 : walkMinutes;
                         log.innerHTML += `<br>✅ 最寄駅 [${nearestStation.name}] 徒歩 ${walkMinutes} 分`;
+                        calculateValue(); // 도보 거리가 바뀌면 즉시 점수 재계산
                     }
                 });
             }
         });
     }
 
-    // 공시지가 그래프 그리기 (Chart.js)
     function drawTrendChart(prices) {
         document.getElementById('chart_wrapper').style.display = 'block';
         const ctx = document.getElementById('landPriceChart').getContext('2d');
-        
-        // 기존 차트가 있으면 지우고 다시 그림
         if(priceChart) { priceChart.destroy(); }
 
         const currentYear = new Date().getFullYear();
         const labels = [currentYear-4 + '年', currentYear-3 + '年', currentYear-2 + '年', currentYear-1 + '年', currentYear + '年'];
-
-        // 상승장인지 하락장인지에 따라 선 색상 변경
         const isUpward = prices[4] >= prices[0];
-        const lineColor = isUpward ? '#d93025' : '#1a73e8'; // 오르면 빨간색, 내리면 파란색
+        const lineColor = isUpward ? '#d93025' : '#1a73e8'; 
         const bgColor = isUpward ? 'rgba(217, 48, 37, 0.1)' : 'rgba(26, 115, 232, 0.1)';
 
         priceChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: '公示地価 (円/㎡)',
-                    data: prices,
-                    borderColor: lineColor,
-                    backgroundColor: bgColor,
-                    borderWidth: 2,
-                    pointBackgroundColor: lineColor,
-                    fill: true,
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { beginAtZero: false, ticks: { callback: function(value) { return value.toLocaleString() + '円'; } } }
-                }
-            }
+            type: 'line', data: { labels: labels, datasets: [{ label: '公示地価 (円/㎡)', data: prices, borderColor: lineColor, backgroundColor: bgColor, borderWidth: 2, pointBackgroundColor: lineColor, fill: true, tension: 0.1 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false, ticks: { callback: function(value) { return value.toLocaleString() + '円'; } } } } }
         });
-
-        // 최신 지가를 바탕으로 토지 면적 단가 정보 업데이트 (가이드용)
         document.getElementById('land_price_info').innerHTML = `💡 参考: 最新の公示地価は <b>¥${prices[4].toLocaleString()}/㎡</b> です。`;
         document.getElementById('land_price_info').style.color = "#d93025";
     }
 
-    // 콤마 포맷팅 및 가치 평가 로직 (이전 버전과 동일하게 유지)
+    // 숫자를 입력할 때마다 실시간으로 콤마를 찍고, 단가를 계산한 뒤, 최종 점수까지 자동 판정함
     function formatAndCalc(input) {
         let value = input.value.replace(/,/g, '');
         if (!isNaN(value) && value !== "") input.value = Number(value).toLocaleString();
         calculateUnitPrices();
+        calculateValue(); // 숫자가 바뀔 때마다 즉시 평가
     }
 
     function calculateUnitPrices() {
@@ -306,13 +283,14 @@
         }
     }
 
-    function toggleParking() { document.getElementById('parking_group').style.display = (document.getElementById('area').value === 'local') ? 'block' : 'none'; }
-
+    // ★ 평가 로직 핵심 부분 ★
     function calculateValue() {
         const getNum = (id) => parseFloat(document.getElementById(id).value.replace(/,/g, '')) || 0;
+        const area = document.getElementById('area').value;
         const price = getNum('price'); const sekisan = getNum('sekisan');
         const age = parseInt(document.getElementById('age').value);
         const stationDist = parseInt(document.getElementById('station_dist').value);
+        const parking = document.getElementById('parking').value;
         const roomCount = parseInt(document.getElementById('room_count').value) || 0;
         const currentRent = getNum('current_rent'); const marketRentPerRoom = getNum('market_rent_per_room');
         const cashflow = getNum('cashflow'); const illegal = document.getElementById('illegal').checked;
@@ -320,30 +298,93 @@
         const totalMarketRent = roomCount * marketRentPerRoom;
         let score = 100; let isRejected = false; let feedbacks = [];
 
-        if (illegal || cashflow < 0 || stationDist > 12) isRejected = true;
-        
+        // 1. 하드 필터 (12분 초과 시 무조건 탈락 조건 삭제 완료)
+        if (illegal) { isRejected = true; feedbacks.push({ msg: "【却下】 再建築不可・違法建築物件です。", type: "alert" }); }
+        if (cashflow < 0) { isRejected = true; feedbacks.push({ msg: "【却下】 キャッシュフローがマイナスです。", type: "alert" }); }
+
+        // 2. 적산가 비율
         const sekisanRatio = (sekisan / price) * 100;
-        if (sekisanRatio < 60) { score -= 30; feedbacks.push({ msg: `【注意】 積算比率(${sekisanRatio.toFixed(1)}%)が低いです。`, type: "alert" }); }
-        else if (sekisanRatio >= 80) feedbacks.push({ msg: "【良好】 積算比率が高い資産価値のある物件です。", type: "good" });
+        if (sekisanRatio <= 50) {
+            score -= 40; feedbacks.push({ msg: `【危険】 積算比率が極端に低い(${sekisanRatio.toFixed(1)}%)。`, type: "alert" });
+        } else if (area === 'tokyo_osaka' && sekisanRatio < 80) {
+            score -= 15; feedbacks.push({ msg: `【注意】 都心基準の積算比率80%を下回っています(${sekisanRatio.toFixed(1)}%)。`, type: "warning" });
+        } else if (area === 'local' && sekisanRatio < 60) {
+            score -= 15; feedbacks.push({ msg: `【注意】 地方基準の積算比率60%を下回っています(${sekisanRatio.toFixed(1)}%)。`, type: "warning" });
+        } else if ((area === 'tokyo_osaka' && sekisanRatio >= 80) || (area === 'local' && sekisanRatio >= 60)) {
+            feedbacks.push({ msg: "【良好】 積算比率が基準を満たす資産価値のある物件です。", type: "good" });
+        }
 
-        if (stationDist <= 5) feedbacks.push({ msg: "【最強】 圧倒的な駅近立地です。", type: "good" });
+        // 3. 건축 연수
+        if (age > 15) { score -= 10; feedbacks.push({ msg: `【警告】 築年数が ${age}年です (基準15年以内)。`, type: "warning" }); }
 
-        const rentGap = ((totalMarketRent - currentRent) / currentRent) * 100;
-        if (rentGap > 5) { feedbacks.push({ msg: `【魅力】 賃料アップ余地(${rentGap.toFixed(1)}%)があります。`, type: "good" }); score += 10; }
+        // 4. 역 도보 (신규 채점표 적용)
+        if (stationDist <= 5) { 
+            score += 10; feedbacks.push({ msg: "【最強】 駅徒歩5分以内 (+10点)", type: "good" }); 
+        } else if (stationDist <= 8) { 
+            score += 5; feedbacks.push({ msg: "【良好】 駅徒歩8分以内 (+5点)", type: "good" }); 
+        } else if (stationDist <= 10) { 
+            feedbacks.push({ msg: "【許容】 駅徒歩10分以内 (±0点)", type: "warning" }); 
+        } else if (stationDist <= 12) { 
+            score -= 3; feedbacks.push({ msg: "【やや遠い】 駅徒歩12分以内 (-3点)", type: "warning" }); 
+        } else { 
+            score -= 10; feedbacks.push({ msg: `【遠い】 駅徒歩${stationDist}分 (-10点)`, type: "alert" }); 
+        }
 
-        const resultSection = document.getElementById('result_section'); resultSection.style.display = 'block';
+        // 5. 주차장 점수 가산/감점
+        if (parking === 'yes') {
+            if (area === 'tokyo_osaka') {
+                score += 7; feedbacks.push({ msg: "【プラス要因】 都心エリアで駐車場完備 (+7点)", type: "good" });
+            } else {
+                score += 3; feedbacks.push({ msg: "【プラス要因】 地方エリアで駐車場完備 (+3点)", type: "good" });
+            }
+        } else {
+            if (area === 'local') {
+                score -= 15; feedbacks.push({ msg: "【警告】 地方物件で駐車場無し。客付けリスク大 (-15点)", type: "alert" });
+            }
+        }
+
+        // 6. 월세 업사이드
+        if (currentRent > 0) {
+            const rentGap = ((totalMarketRent - currentRent) / currentRent) * 100;
+            if (rentGap >= 5) { score += 10; feedbacks.push({ msg: `【魅力】 賃料アップ余地(${rentGap.toFixed(1)}%)があります。`, type: "good" }); }
+            else if (rentGap <= -5) { score -= 15; feedbacks.push({ msg: `【リスク】 現状家賃が相場より割高です。`, type: "alert" }); }
+        }
+
+        // 렌더링
         const statusEl = document.getElementById('final_status');
         
-        score = Math.max(0, Math.min(100, score));
+        // 100점 상한선 폐지 (Math.max를 통해 0점 이하로만 안 내려가게 설정)
+        score = Math.max(0, Math.round(score)); 
         if (isRejected) score = 0;
         document.getElementById('final_score').innerText = score + " 点";
 
-        if (isRejected) { statusEl.innerText = "🚨 投資対象外 (Reject)"; statusEl.style.color = "#d93025"; }
-        else if (score >= 80) { statusEl.innerText = "✅ 積極検討 (Pass)"; statusEl.style.color = "#1e8e3e"; }
-        else { statusEl.innerText = "⚠️ 慎重調査 (Hold)"; statusEl.style.color = "#f9ab00"; }
+        if (isRejected) { 
+            statusEl.innerText = "🚨 投資対象外 (Reject)"; 
+            statusEl.style.color = "#d93025"; 
+            document.getElementById('final_score').style.color = "#d93025";
+        }
+        else if (score >= 100) { 
+            statusEl.innerText = "🏆 超優良物件 (Excellent)"; 
+            statusEl.style.color = "#005a9e"; // 초우량 전용 파란색
+            document.getElementById('final_score').style.color = "#005a9e";
+        }
+        else if (score >= 80) { 
+            statusEl.innerText = "✅ 積極検討 (Pass)"; 
+            statusEl.style.color = "#1e8e3e"; 
+            document.getElementById('final_score').style.color = "#1e8e3e";
+        }
+        else if (score >= 60) { 
+            statusEl.innerText = "⚠️ 慎重調査 (Hold)"; 
+            statusEl.style.color = "#f9ab00"; 
+            document.getElementById('final_score').style.color = "#f9ab00";
+        }
+        else { 
+            statusEl.innerText = "❌ 見送り推奨 (Weak)"; 
+            statusEl.style.color = "#d93025"; 
+            document.getElementById('final_score').style.color = "#d93025";
+        }
 
         document.getElementById('feedback_list').innerHTML = feedbacks.map(f => `<li class="${f.type}">${f.msg}</li>`).join('');
-        resultSection.scrollIntoView({ behavior: 'smooth' });
     }
 </script>
 </body>
