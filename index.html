@@ -1,792 +1,633 @@
-# 전체 코드 (Full HTML)
-
-```html
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Real Estate Investment Intelligence</title>
-<link rel="icon" type="image/png" href="logo.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-:root {
-  --bg: #081120;
-  --card: #111827;
-  --card-2: #172033;
-  --line: #263244;
-  --text: #f8fafc;
-  --sub: #94a3b8;
-  --blue: #3b82f6;
-  --green: #10b981;
-  --yellow: #f59e0b;
-  --red: #ef4444;
-}
-
-body {
-  font-family: 'Inter', sans-serif;
-  background:
-    radial-gradient(circle at top left, rgba(59,130,246,0.12), transparent 20%),
-    radial-gradient(circle at bottom right, rgba(16,185,129,0.08), transparent 20%),
-    var(--bg);
-  color: var(--text);
-  min-height: 100vh;
-  padding: 24px;
-}
-
-.wrapper {
-  max-width: 1600px;
-  margin: 0 auto;
-}
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 28px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.brand img {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-  object-fit: cover;
-  border: 2px solid rgba(59,130,246,.4);
-}
-
-.brand h1 {
-  font-size: 28px;
-  font-weight: 800;
-}
-
-.brand p {
-  color: var(--sub);
-  margin-top: 4px;
-}
-
-.score-preview {
-  background: linear-gradient(135deg, #1d4ed8, #2563eb);
-  padding: 18px 26px;
-  border-radius: 22px;
-  min-width: 180px;
-  box-shadow: 0 20px 40px rgba(37,99,235,.3);
-}
-
-.score-preview span {
-  font-size: 13px;
-  opacity: .8;
-}
-
-.score-preview h2 {
-  font-size: 42px;
-  margin-top: 4px;
-}
-
-.kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
-  margin-bottom: 24px;
-}
-
-.kpi-card {
-  background: rgba(17,24,39,.75);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  padding: 22px;
-}
-
-.kpi-card span {
-  display: block;
-  color: var(--sub);
-  font-size: 13px;
-  margin-bottom: 12px;
-}
-
-.kpi-card strong {
-  font-size: 30px;
-  font-weight: 800;
-}
-
-.dashboard {
-  display: grid;
-  grid-template-columns: 420px 1fr;
-  gap: 24px;
-}
-
-.sidebar {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.card {
-  background: rgba(17,24,39,.82);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--line);
-  border-radius: 28px;
-  padding: 24px;
-  box-shadow: 0 10px 40px rgba(0,0,0,.25);
-}
-
-.card-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.card-title h2 {
-  font-size: 18px;
-}
-
-.card-title p {
-  color: var(--sub);
-  font-size: 13px;
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-.form-group label {
-  display: block;
-  font-size: 13px;
-  color: var(--sub);
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  background: #0b1324;
-  border: 1px solid #314056;
-  border-radius: 16px;
-  padding: 15px;
-  color: white;
-  font-size: 15px;
-  transition: .25s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: var(--blue);
-  box-shadow: 0 0 0 5px rgba(59,130,246,.15);
-}
-
-.double {
-  display: grid;
-  grid-template-columns: 1fr 110px;
-  gap: 12px;
-}
-
-.analyze-btn {
-  width: 100%;
-  margin-top: 8px;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  border: none;
-  color: white;
-  padding: 18px;
-  border-radius: 18px;
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: .25s;
-}
-
-.analyze-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(37,99,235,.35);
-}
-
-.main {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.hero-grid {
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 24px;
-}
-
-.score-card {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-}
-
-.score-ring {
-  width: 230px;
-  height: 230px;
-  border-radius: 50%;
-  background: conic-gradient(
-    var(--green) 0deg,
-    var(--green) 290deg,
-    #1f2937 290deg
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  margin-bottom: 22px;
-}
-
-.score-ring::before {
-  content: "";
-  position: absolute;
-  width: 180px;
-  height: 180px;
-  background: #09111f;
-  border-radius: 50%;
-}
-
-.score-inner {
-  position: relative;
-  z-index: 5;
-  text-align: center;
-}
-
-.score-inner h2 {
-  font-size: 64px;
-  line-height: 1;
-}
-
-.score-inner span {
-  color: var(--sub);
-  font-size: 14px;
-}
-
-.grade {
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: rgba(16,185,129,.15);
-  color: #4ade80;
-  font-weight: 700;
-}
-
-.report-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-}
-
-.report-box {
-  background: #0d1729;
-  border: 1px solid #263244;
-  border-radius: 20px;
-  padding: 20px;
-}
-
-.report-box span {
-  display: block;
-  color: var(--sub);
-  font-size: 13px;
-  margin-bottom: 10px;
-}
-
-.report-box strong {
-  font-size: 26px;
-}
-
-.analysis-box {
-  margin-top: 18px;
-  background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(16,185,129,.08));
-  border: 1px solid rgba(59,130,246,.18);
-  border-radius: 22px;
-  padding: 24px;
-}
-
-.analysis-box ul {
-  list-style: none;
-  display: grid;
-  gap: 14px;
-}
-
-.analysis-box li {
-  padding: 14px 18px;
-  border-radius: 14px;
-  background: rgba(255,255,255,.03);
-  color: #dbeafe;
-}
-
-.bottom-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
-}
-
-.chart-card {
-  height: 420px;
-  overflow: hidden;
-}
-
-.chart-card canvas {
-  width: 100% !important;
-  height: 300px !important;
-  max-height: 300px !important;
-  display: block;
-}
-
-.tag-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 20px;
-}
-
-.tag {
-  padding: 10px 16px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.tag.green {
-  background: rgba(16,185,129,.15);
-  color: #4ade80;
-}
-
-.tag.red {
-  background: rgba(239,68,68,.15);
-  color: #f87171;
-}
-
-.tag.yellow {
-  background: rgba(245,158,11,.15);
-  color: #fbbf24;
-}
-
-.credit {
-  margin-top: 24px;
-  text-align: center;
-  color: #64748b;
-  font-size: 12px;
-}
-
-@media (max-width: 1200px) {
-  .dashboard,
-  .hero-grid,
-  .bottom-grid,
-  .kpi-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  body {
-    padding: 14px;
-  }
-
-  .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-  }
-
-  .report-grid {
-    grid-template-columns: 1fr;
-  }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>부동산 투자 가치 시뮬레이터 | RE Value Analyzer</title>
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, 'Apple SD Gothic Neo', sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
+            padding: 16px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 24px 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+        .header-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 3px solid #1a73e8;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .header-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 26px;
+            box-shadow: 0 2px 8px rgba(26,115,232,0.3);
+        }
+        h1 {
+            font-size: 22px;
+            color: #1a73e8;
+            margin: 0;
+            line-height: 1.3;
+        }
+        .form-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 6px;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #2c3e4e;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #cfdde6;
+            border-radius: 12px;
+            font-size: 14px;
+            background-color: #ffffff;
+            transition: all 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.15);
+        }
+        .unit-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .unit-group select {
+            width: 85px;
+        }
+        .price-info {
+            font-size: 12px;
+            color: #1a73e8;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+        .btn-api {
+            background: linear-gradient(95deg, #1a73e8, #0b5ed7);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 40px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 12px;
+            transition: 0.2s;
+            box-shadow: 0 2px 6px rgba(26,115,232,0.3);
+        }
+        .btn-api:hover {
+            background: linear-gradient(95deg, #0b5ed7, #0947a3);
+            transform: translateY(-1px);
+        }
+        #api_log {
+            font-size: 12px;
+            color: #1a5b9c;
+            margin-top: 12px;
+            background: #eef3fc;
+            padding: 12px;
+            border-radius: 16px;
+            display: none;
+            line-height: 1.5;
+        }
+        #env_dashboard {
+            background: #f8fafc;
+            border: 1px solid #e2edf7;
+            border-radius: 20px;
+            padding: 16px;
+            margin-top: 20px;
+            display: none;
+        }
+        .dashboard-title {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #0b3b5f;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .env-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: space-between;
+        }
+        .env-card {
+            background: white;
+            border-radius: 16px;
+            padding: 12px 16px;
+            flex: 1;
+            min-width: 180px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .chart-container {
+            margin-top: 20px;
+            height: 280px;
+            display: none;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 10px;
+        }
+        .result-box {
+            margin-top: 28px;
+            padding: 20px;
+            border-radius: 24px;
+            background: #fefefe;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+        }
+        .status {
+            font-size: 26px;
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: -0.5px;
+        }
+        .score-circle {
+            font-size: 58px;
+            font-weight: 800;
+            text-align: center;
+            margin: 12px 0;
+            background: #f1f5f9;
+            display: inline-block;
+            width: 100%;
+            border-radius: 60px;
+            padding: 12px;
+            color: #1e293b;
+        }
+        .details-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0 0;
+        }
+        .details-list li {
+            margin-bottom: 10px;
+            font-size: 14px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            border-left: 5px solid;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .alert { border-left-color: #d93025; background: #fef2f0; color: #b91c1c; }
+        .warning { border-left-color: #f9ab00; background: #fffbeb; color: #b45309; }
+        .good { border-left-color: #1e8e3e; background: #ecfdf5; color: #065f46; }
+        .credit-text {
+            font-size: 10px;
+            color: #8ba0ae;
+            text-align: center;
+            margin-top: 28px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #ddd;
+            border-top-color: #1a73e8;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 640px) {
+            .container { padding: 16px; }
+            .status { font-size: 22px; }
+            .score-circle { font-size: 44px; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 </head>
-
 <body>
-<div class="wrapper">
-
-  <header class="topbar">
-    <div class="brand">
-      <img src="logo.png" alt="logo">
-
-      <div>
-        <h1>Real Estate Investment Intelligence</h1>
-        <p>AI Investment Evaluation Dashboard</p>
-      </div>
+<div class="container">
+    <div class="header-container">
+        <div class="header-logo">🏠</div>
+        <h1>부동산 투자 가치 판단기<br><span style="font-size: 13px; color:#5f7f9e;">Real Estate Value Simulator</span></h1>
     </div>
 
-    <div class="score-preview">
-      <span>Current Investment Score</span>
-      <h2 id="topScore">84</h2>
+    <div class="form-section">
+        <div class="form-group"><label>📍 지역 (Area)</label><select id="area"><option value="tokyo_osaka">도쿄/오사카 핵심 지역</option><option value="local">지방 주요 도시</option></select></div>
+        <div class="form-group"><label>🚗 주차장</label><select id="parking"><option value="yes">완비</option><option value="no">없음</option></select></div>
+        
+        <div class="form-group full-width">
+            <label>🏷️ 물건 주소 (정확할수록 정밀 분석)</label>
+            <input type="text" id="full_address" placeholder="예: 東京都新宿区新宿4-4-13" value="東京都新宿区新宿4-4-13">
+            <button type="button" class="btn-api" id="analyzeBtn">🔍 공시지가 · 인구 · 재해위험 자동 분석</button>
+            <div id="api_log"></div>
+            <div id="env_dashboard">
+                <div class="dashboard-title">📊 투자 환경 & 재해 리스크</div>
+                <div class="env-grid">
+                    <div class="env-card" id="pop_card">🏙️ 인구 데이터 조회중...</div>
+                    <div class="env-card" id="hazard_card">🌊 재해 위험 분석중...</div>
+                </div>
+            </div>
+            <div class="chart-container" id="chart_wrapper"><canvas id="landPriceChart"></canvas></div>
+        </div>
+        
+        <div class="form-group"><label>💰 매매가 (JPY)</label><input type="text" id="price" value="120,000,000"></div>
+        <div class="form-group"><label>📐 토지 면적</label><div class="unit-group"><input type="number" id="land_area" value="100" step="0.5"><select id="land_unit"><option value="m2">㎡</option><option value="tsubo">坪</option></select></div><div id="land_price_info" class="price-info">㎡단가: -</div></div>
+        <div class="form-group"><label>📊 적산가 (건축비)</label><input type="text" id="sekisan" value="85,000,000"></div>
+        <div class="form-group"><label>🏢 연면적</label><div class="unit-group"><input type="number" id="build_area" value="200" step="0.5"><select id="build_unit"><option value="m2">㎡</option><option value="tsubo">坪</option></select></div></div>
+        <div class="form-group"><label>📅 경과 연수</label><select id="age"></select></div>
+        <div class="form-group"><label>🚉 역까지 도보(분)</label><select id="station_dist"></select></div>
+        <div class="form-group"><label>🚪 총 세대 수</label><input type="number" id="room_count" value="10"></div>
+        <div class="form-group"><label>💵 현재 월 임대료 총액</label><input type="text" id="current_rent" value="750,000"></div>
+        <div class="form-group"><label>📈 주변 시세(세대당 월세)</label><input type="text" id="market_rent_per_room" value="80,000"></div>
+        <div class="form-group"><label>💸 월 순현금흐름</label><input type="text" id="cashflow" value="150,000"></div>
     </div>
-  </header>
-
-  <section class="kpi-grid">
-    <div class="kpi-card">
-      <span>積算比率</span>
-      <strong id="kpiSekisan">71%</strong>
+    
+    <div class="form-group full-width"><label><input type="checkbox" id="illegal"> 🚫 재건축 불가 / 위법 건축물 (강력 패널티)</label></div>
+    
+    <div id="result_section" class="result-box">
+        <div class="status" id="final_status">⚡ 입력 후 분석</div>
+        <div class="score-circle" id="final_score">-- 점</div>
+        <ul class="details-list" id="feedback_list"></ul>
     </div>
-
-    <div class="kpi-card">
-      <span>表面利回り</span>
-      <strong id="kpiYield">7.5%</strong>
-    </div>
-
-    <div class="kpi-card">
-      <span>Monthly CF</span>
-      <strong id="kpiCf">¥150K</strong>
-    </div>
-
-    <div class="kpi-card">
-      <span>Risk Index</span>
-      <strong id="kpiRisk">LOW</strong>
-    </div>
-  </section>
-
-  <section class="dashboard">
-
-    <aside class="sidebar">
-
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Property Information</h2>
-            <p>Basic investment parameters</p>
-          </div>
-        </div>
-
-        <div class="form-grid">
-
-          <div class="form-group">
-            <label>物件住所</label>
-            <input type="text" id="address" placeholder="東京都新宿区新宿4-4-13">
-          </div>
-
-          <div class="form-group">
-            <label>物件価格</label>
-            <input type="text" id="price" value="120000000">
-          </div>
-
-          <div class="form-group">
-            <label>積算価格</label>
-            <input type="text" id="sekisan" value="85000000">
-          </div>
-
-          <div class="form-group">
-            <label>土地面積</label>
-            <div class="double">
-              <input type="number" id="land_area" value="100">
-
-              <select id="land_unit">
-                <option>㎡</option>
-                <option>坪</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label>築年数</label>
-            <select id="age">
-              <option>5</option>
-              <option selected>10</option>
-              <option>15</option>
-              <option>20</option>
-              <option>30</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>駅徒歩</label>
-            <select id="station_dist">
-              <option>3</option>
-              <option>5</option>
-              <option selected>8</option>
-              <option>12</option>
-              <option>15</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>総戸数</label>
-            <input type="number" id="room_count" value="10">
-          </div>
-
-          <div class="form-group">
-            <label>現状月額総家賃</label>
-            <input type="text" id="current_rent" value="750000">
-          </div>
-
-          <div class="form-group">
-            <label>月間純キャッシュフロー</label>
-            <input type="text" id="cashflow" value="150000">
-          </div>
-
-          <button class="analyze-btn" onclick="calculateValue()">
-            Analyze Investment Opportunity
-          </button>
-
-        </div>
-      </div>
-
-    </aside>
-
-    <main class="main">
-
-      <div class="hero-grid">
-
-        <div class="card score-card">
-
-          <div class="score-ring">
-            <div class="score-inner">
-              <h2 id="mainScore">84</h2>
-              <span>Investment Score</span>
-            </div>
-          </div>
-
-          <div class="grade" id="gradeText">
-            GRADE A
-          </div>
-
-        </div>
-
-        <div class="card">
-
-          <div class="card-title">
-            <div>
-              <h2>Investment Report</h2>
-              <p>AI-based asset evaluation</p>
-            </div>
-          </div>
-
-          <div class="report-grid">
-
-            <div class="report-box">
-              <span>Expected Yield</span>
-              <strong id="yieldValue">7.5%</strong>
-            </div>
-
-            <div class="report-box">
-              <span>Asset Stability</span>
-              <strong id="stabilityValue">HIGH</strong>
-            </div>
-
-            <div class="report-box">
-              <span>Liquidity</span>
-              <strong id="liquidityValue">GOOD</strong>
-            </div>
-
-            <div class="report-box">
-              <span>Disaster Risk</span>
-              <strong id="riskValue">LOW</strong>
-            </div>
-
-          </div>
-
-          <div class="analysis-box">
-            <ul id="feedbackList">
-              <li>積算比率が比較的良好</li>
-              <li>駅徒歩圏内のため流動性期待</li>
-              <li>キャッシュフローが安定</li>
-              <li>人口集積エリアの可能性</li>
-            </ul>
-          </div>
-
-          <div class="tag-row">
-            <div class="tag green">人口増加</div>
-            <div class="tag green">駅近</div>
-            <div class="tag yellow">築10年</div>
-            <div class="tag red">津波注意</div>
-          </div>
-
-        </div>
-
-      </div>
-
-      <div class="bottom-grid">
-
-        <div class="card chart-card">
-          <div class="card-title">
-            <div>
-              <h2>地価推移</h2>
-              <p>10 years trend analysis</p>
-            </div>
-          </div>
-
-          <canvas id="priceChart"></canvas>
-        </div>
-
-        <div class="card chart-card">
-          <div class="card-title">
-            <div>
-              <h2>Market Intelligence</h2>
-              <p>Population & hazard overview</p>
-            </div>
-          </div>
-
-          <div style="display:grid; gap:16px; margin-top:10px;">
-
-            <div class="report-box">
-              <span>Population Trend</span>
-              <strong style="color:#4ade80;">+3.8%</strong>
-            </div>
-
-            <div class="report-box">
-              <span>Hazard Exposure</span>
-              <strong style="color:#f87171;">Flood Medium</strong>
-            </div>
-
-            <div class="report-box">
-              <span>Nearest Station</span>
-              <strong>徒歩 8分</strong>
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    </main>
-
-  </section>
-
-  <div class="credit">
-    Powered by MLIT API / Real Estate Intelligence Engine
-  </div>
-
+    <div class="credit-text">※ 본 데이터는 참고용이며 실제 투자 결정 시 전문가와 상담하세요. 국토교통성 공시정보 기반.</div>
 </div>
 
 <script>
-function calculateValue() {
+    // ---------- 글로벌 변수 ----------
+    let priceChart = null;
+    window.hazardPenalties = [];
+    window.popBonus = { active: false, growth: 0 };
+    window.stationAutoSet = false;
+    let isAnalyzing = false;
+    let currentCoordinates = null;
 
-  const price = parseFloat(document.getElementById('price').value.replace(/,/g,'')) || 0;
-  const sekisan = parseFloat(document.getElementById('sekisan').value.replace(/,/g,'')) || 0;
-  const cashflow = parseFloat(document.getElementById('cashflow').value.replace(/,/g,'')) || 0;
-  const station = parseInt(document.getElementById('station_dist').value);
-  const age = parseInt(document.getElementById('age').value);
-  const rent = parseFloat(document.getElementById('current_rent').value.replace(/,/g,'')) || 0;
+    const WORKER_URL = "https://falling-pond-d864.alexall1972.workers.dev/?url=";
 
-  const yearlyRent = rent * 12;
-  const yieldRate = ((yearlyRent / price) * 100).toFixed(1);
-  const sekisanRatio = ((sekisan / price) * 100).toFixed(1);
-
-  let score = 100;
-
-  if (sekisanRatio < 70) score -= 15;
-  if (sekisanRatio < 55) score -= 20;
-  if (station > 10) score -= 10;
-  if (age > 20) score -= 10;
-  if (cashflow < 100000) score -= 10;
-
-  score = Math.max(0, Math.round(score));
-
-  let grade = 'A';
-
-  if (score >= 90) grade = 'S';
-  else if (score >= 80) grade = 'A';
-  else if (score >= 70) grade = 'B';
-  else if (score >= 60) grade = 'C';
-  else grade = 'D';
-
-  document.getElementById('mainScore').innerText = score;
-  document.getElementById('topScore').innerText = score;
-  document.getElementById('gradeText').innerText = `GRADE ${grade}`;
-
-  document.getElementById('yieldValue').innerText = `${yieldRate}%`;
-  document.getElementById('kpiYield').innerText = `${yieldRate}%`;
-  document.getElementById('kpiSekisan').innerText = `${sekisanRatio}%`;
-  document.getElementById('kpiCf').innerText = `¥${Math.round(cashflow/1000)}K`;
-
-  const feedbacks = [];
-
-  if (sekisanRatio >= 70)
-    feedbacks.push('積算比率が高く融資適性が良好');
-
-  if (yieldRate >= 7)
-    feedbacks.push('表面利回りが投資基準を上回る');
-
-  if (station <= 8)
-    feedbacks.push('駅徒歩圏内で賃貸需要が期待可能');
-
-  if (age >= 20)
-    feedbacks.push('築年数に対する修繕リスク確認必要');
-
-  document.getElementById('feedbackList').innerHTML = feedbacks
-    .map(v => `<li>${v}</li>`)
-    .join('');
-
-  const ring = document.querySelector('.score-ring');
-  const deg = score * 3.6;
-
-  let color = '#10b981';
-
-  if (score < 80) color = '#f59e0b';
-  if (score < 60) color = '#ef4444';
-
-  ring.style.background = `conic-gradient(
-    ${color} 0deg,
-    ${color} ${deg}deg,
-    #1f2937 ${deg}deg
-  )`;
-}
-
-calculateValue();
-
-const ctx = document.getElementById('priceChart');
-
-new Chart(ctx, {
-  type: 'line',
-  data: {
-    labels: ['2017','2018','2019','2020','2021','2022','2023','2024','2025'],
-    datasets: [{
-      label: 'Land Price',
-      data: [82,84,88,90,93,99,104,109,115],
-      tension: .4,
-      fill: true
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        labels: {
-          color: 'white'
+    // ---------- 초기화 ----------
+    document.addEventListener('DOMContentLoaded', () => {
+        // 경과연수 셀렉트 (0~50)
+        const ageSelect = document.getElementById('age');
+        for(let i=0; i<=50; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = i + "년";
+            if(i === 10) opt.selected = true;
+            ageSelect.appendChild(opt);
         }
-      }
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: '#94a3b8'
-        },
-        grid: {
-          color: 'rgba(255,255,255,.05)'
+        // 도보시간 (1~45)
+        const distSelect = document.getElementById('station_dist');
+        for(let i=1; i<=45; i++) {
+            let opt = document.createElement('option');
+            opt.value = i;
+            opt.innerHTML = i + "분";
+            if(i === 8) opt.selected = true;
+            distSelect.appendChild(opt);
         }
-      },
-      y: {
-        ticks: {
-          color: '#94a3b8'
-        },
-        grid: {
-          color: 'rgba(255,255,255,.05)'
-        }
-      }
+        
+        // 모든 숫자 인풋 콤마+계산 연결
+        const numberInputs = ['price', 'sekisan', 'current_rent', 'market_rent_per_room', 'cashflow'];
+        numberInputs.forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('input', function() { formatNumberInput(this); recalcAll(); });
+        });
+        
+        document.getElementById('land_area').addEventListener('input', () => recalcAll());
+        document.getElementById('land_unit').addEventListener('change', () => recalcAll());
+        document.getElementById('room_count').addEventListener('input', () => recalcAll());
+        document.getElementById('area').addEventListener('change', () => recalcAll());
+        document.getElementById('parking').addEventListener('change', () => recalcAll());
+        document.getElementById('age').addEventListener('change', () => recalcAll());
+        document.getElementById('station_dist').addEventListener('change', () => recalcAll());
+        document.getElementById('illegal').addEventListener('change', () => recalcAll());
+        
+        document.getElementById('analyzeBtn').addEventListener('click', runFullAnalysis);
+        
+        // 초기 단가 계산 & 점수 계산
+        recalcAll();
+    });
+
+    function formatNumberInput(input) {
+        let raw = input.value.replace(/,/g, '');
+        if(raw === '' || isNaN(raw)) raw = '0';
+        let num = parseFloat(raw);
+        if(isNaN(num)) num = 0;
+        input.value = num.toLocaleString();
     }
-  }
-});
+
+    function getNumberFromInput(id) {
+        const el = document.getElementById(id);
+        if(!el) return 0;
+        let val = el.value.replace(/,/g, '');
+        let num = parseFloat(val);
+        return isNaN(num) ? 0 : num;
+    }
+
+    function calculateUnitPrices() {
+        const price = getNumberFromInput('price');
+        let area = parseFloat(document.getElementById('land_area').value) || 0;
+        const unit = document.getElementById('land_unit').value;
+        if(area > 0 && price > 0) {
+            let sqm = (unit === 'tsubo') ? area * 3.30578 : area;
+            let tsubo = (unit === 'm2') ? area / 3.30578 : area;
+            document.getElementById('land_price_info').innerHTML = `㎡단가: ¥${Math.round(price / sqm).toLocaleString()} / 坪단가: ¥${Math.round(price / tsubo).toLocaleString()}`;
+        } else {
+            document.getElementById('land_price_info').innerHTML = `㎡단가: 입력 필요`;
+        }
+    }
+
+    async function runFullAnalysis() {
+        if(isAnalyzing) return;
+        const addressElem = document.getElementById('full_address');
+        let address = addressElem.value.trim();
+        if(!address) { alert('주소를 입력하세요'); return; }
+        isAnalyzing = true;
+        const logDiv = document.getElementById('api_log');
+        logDiv.style.display = 'block';
+        logDiv.innerHTML = `<span class="loading-spinner"></span> 주소 정규화 및 좌표 획득 중...`;
+        document.getElementById('env_dashboard').style.display = 'block';
+        document.getElementById('final_status').innerText = "⏳ API 분석 진행 중...";
+        
+        try {
+            // Google Maps API가 로드될 때까지 대기
+            if(typeof google === 'undefined' || !google.maps) {
+                logDiv.innerHTML = '❌ Google Maps API 로드 실패. 네트워크 확인 또는 API 키 재설정 필요.';
+                isAnalyzing = false;
+                return;
+            }
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ address: address }, async (results, status) => {
+                if(status === 'OK' && results[0]) {
+                    const loc = results[0].geometry.location;
+                    currentCoordinates = { lat: loc.lat(), lng: loc.lng() };
+                    logDiv.innerHTML = `✅ 좌표 획득: ${loc.lat().toFixed(5)}, ${loc.lng().toFixed(5)}<br>🔍 지가·환경정보 호출중...`;
+                    
+                    await Promise.allSettled([
+                        fetchLandPriceTrend(loc.lat(), loc.lng(), logDiv),
+                        fetchEnvironmentData(loc.lat(), loc.lng(), logDiv),
+                        autoStationDistance(loc, logDiv)
+                    ]);
+                    logDiv.innerHTML += `<br>🎉 분석 완료! 점수가 갱신됩니다.`;
+                    recalcAll();
+                    document.getElementById('final_status').innerText = "분석 완료";
+                } else {
+                    logDiv.innerHTML = `❌ 주소 인식 실패: ${status}`;
+                    document.getElementById('final_status').innerText = "주소 오류";
+                }
+                isAnalyzing = false;
+            });
+        } catch(err) {
+            logDiv.innerHTML = `⚠️ 오류: ${err.message}`;
+            isAnalyzing = false;
+        }
+    }
+
+    async function fetchLandPriceTrend(lat, lng, logDiv) {
+        try {
+            const tile = getTileCoord(lat, lng, 15);
+            const year = new Date().getFullYear() - 1;
+            const url = `https://www.reinfolib.mlit.go.jp/ex-api/external/XPT002?year=${year}&response_format=geojson&z=15&x=${tile.x}&y=${tile.y}`;
+            const proxyUrl = WORKER_URL + encodeURIComponent(url);
+            const resp = await fetch(proxyUrl);
+            if(!resp.ok) throw new Error('지가 조회 실패');
+            const data = await resp.json();
+            const pt = turf.point([lng, lat]);
+            let nearestPrice = 0;
+            let minDist = Infinity;
+            if(data.features) {
+                for(let f of data.features) {
+                    let coords = f.geometry.coordinates;
+                    let dist = turf.distance(pt, turf.point(coords));
+                    let priceVal = parseInt(f.properties.L01_006 || f.properties.L02_006, 10);
+                    if(priceVal > 0 && dist < minDist) {
+                        minDist = dist;
+                        nearestPrice = priceVal;
+                    }
+                }
+            }
+            if(!nearestPrice) nearestPrice = (document.getElementById('area').value === 'tokyo_osaka') ? 800000 : 120000;
+            // 10년 추이 (지역별 인덱스)
+            const isTokyo = document.getElementById('area').value === 'tokyo_osaka';
+            const tokyoIdx = [0.79,0.82,0.86,0.90,0.93,0.95,0.96,0.98,1.00,1.04];
+            const localIdx = [0.89,0.90,0.91,0.92,0.92,0.93,0.94,0.96,1.00,1.02];
+            const idxArr = isTokyo ? tokyoIdx : localIdx;
+            const years = [];
+            const prices = [];
+            const currentYear = new Date().getFullYear();
+            for(let i=0; i<10; i++) {
+                let y = currentYear - 9 + i;
+                years.push(`${y}년`);
+                let factor = idxArr[i] / idxArr[8];
+                prices.push(Math.round(nearestPrice * factor));
+            }
+            drawChart(prices, years);
+            logDiv.innerHTML += `<br>📈 기준 공시지가: ${nearestPrice.toLocaleString()} 원/㎡ (${(minDist*1000).toFixed(0)}m 내)`;
+        } catch(e) {
+            logDiv.innerHTML += `<br>⚠️ 지가 트렌드 로딩 실패: ${e.message}`;
+        }
+    }
+
+    async function fetchEnvironmentData(lat, lng, logDiv) {
+        const tile = getTileCoord(lat, lng, 15);
+        const pt = turf.point([lng, lat]);
+        // 인구
+        try {
+            const popUrl = `https://www.reinfolib.mlit.go.jp/ex-api/external/XKT031?response_format=geojson&z=${tile.z}&x=${tile.x}&y=${tile.y}`;
+            const popRes = await fetch(WORKER_URL + encodeURIComponent(popUrl));
+            const popData = await popRes.json();
+            let growth = 0, active = false;
+            if(popData.features) {
+                for(let f of popData.features) {
+                    if(turf.booleanPointInPolygon(pt, f)) {
+                        let before = parseFloat(f.properties.A16_007);
+                        let after = parseFloat(f.properties.A16_005);
+                        if(before > 0) growth = ((after - before) / before) * 100;
+                        active = true;
+                        break;
+                    }
+                }
+            }
+            window.popBonus = { active, growth };
+            document.getElementById('pop_card').innerHTML = active ? `🏙️ 인구밀집지역 해당<br>📈 증감률: ${growth.toFixed(1)}%` : `🏡 인구밀집지역 범위 외`;
+        } catch(e) { document.getElementById('pop_card').innerHTML = '인구정보 불러오기 실패'; }
+        
+        // 재해 (침수, 지진액상화)
+        const hazardTypes = [{id:'XKT026', name:'홍수 위험', penalty:18},{id:'XKT025', name:'액상화 가능성', penalty:12}];
+        let hazardHtml = '';
+        let penalties = [];
+        for(let h of hazardTypes) {
+            try {
+                let url = `https://www.reinfolib.mlit.go.jp/ex-api/external/${h.id}?response_format=geojson&z=${tile.z}&x=${tile.x}&y=${tile.y}`;
+                let res = await fetch(WORKER_URL + encodeURIComponent(url));
+                let data = await res.json();
+                let isRisk = false;
+                if(data.features) {
+                    for(let f of data.features) {
+                        if(turf.booleanPointInPolygon(pt, f)) {
+                            isRisk = true;
+                            break;
+                        }
+                    }
+                }
+                if(isRisk) {
+                    hazardHtml += `⚠️ ${h.name} 해당 `;
+                    penalties.push({name:h.name, penalty:h.penalty});
+                } else {
+                    hazardHtml += `✅ ${h.name} 안전 `;
+                }
+            } catch(e) { hazardHtml += `❓ ${h.name} 데이터 오류 `; }
+        }
+        window.hazardPenalties = penalties;
+        document.getElementById('hazard_card').innerHTML = hazardHtml || '분석 가능한 재해 데이터 없음';
+    }
+
+    async function autoStationDistance(location, logDiv) {
+        if(window.stationAutoSet) return;
+        try {
+            const service = new google.maps.places.PlacesService(document.createElement('div'));
+            service.nearbySearch({ location: location, radius: 1500, type: 'train_station' }, (places, status) => {
+                if(status === google.maps.places.PlacesServiceStatus.OK && places && places.length) {
+                    const distService = new google.maps.DistanceMatrixService();
+                    distService.getDistanceMatrix({
+                        origins: [location],
+                        destinations: [places[0].geometry.location],
+                        travelMode: 'WALKING'
+                    }, (response, dsStatus) => {
+                        if(dsStatus === 'OK' && response.rows[0].elements[0].duration) {
+                            let minutes = Math.ceil(response.rows[0].elements[0].duration.value / 60);
+                            minutes = Math.min(45, minutes);
+                            const stationSelect = document.getElementById('station_dist');
+                            for(let i=0; i<stationSelect.options.length; i++) {
+                                if(parseInt(stationSelect.options[i].value) === minutes) {
+                                    stationSelect.selectedIndex = i;
+                                    break;
+                                }
+                            }
+                            window.stationAutoSet = true;
+                            logDiv.innerHTML += `<br>🚉 자동 역세권 측정: ${places[0].name}까지 ${minutes}분`;
+                            recalcAll();
+                        }
+                    });
+                }
+            });
+        } catch(e) { console.warn(e); }
+    }
+
+    function getTileCoord(lat, lon, zoom) {
+        const x = Math.floor((lon + 180) / 360 * Math.pow(2, zoom));
+        const latRad = lat * Math.PI / 180;
+        const y = Math.floor((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2 * Math.pow(2, zoom));
+        return { z: zoom, x, y };
+    }
+
+    function drawChart(prices, labels) {
+        const canvas = document.getElementById('landPriceChart');
+        const wrapper = document.getElementById('chart_wrapper');
+        if(!canvas) return;
+        wrapper.style.display = 'block';
+        const ctx = canvas.getContext('2d');
+        if(priceChart) priceChart.destroy();
+        priceChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets: [{ label: '공시지가 추이 (원/㎡)', data: prices, borderColor: '#d93025', backgroundColor: 'rgba(217,48,37,0.05)', fill: true, tension: 0.2, pointBackgroundColor: '#1a73e8' }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { tooltip: { callbacks: { label: (ctx) => `${ctx.raw.toLocaleString()} 원` } } } }
+        });
+    }
+
+    function recalcAll() {
+        calculateUnitPrices();
+        if(isAnalyzing) return;
+        const price = getNumberFromInput('price');
+        const sekisan = getNumberFromInput('sekisan');
+        const age = parseInt(document.getElementById('age').value) || 0;
+        const stationDist = parseInt(document.getElementById('station_dist').value) || 10;
+        const parking = document.getElementById('parking').value;
+        const roomCount = parseInt(document.getElementById('room_count').value) || 1;
+        const currentRent = getNumberFromInput('current_rent');
+        const marketRentPerRoom = getNumberFromInput('market_rent_per_room');
+        const cashflow = getNumberFromInput('cashflow');
+        const illegal = document.getElementById('illegal').checked;
+        const areaType = document.getElementById('area').value;
+        
+        let score = 70; // 기본 중간
+        let feedbacks = [];
+        let isRejected = false;
+        
+        if(illegal || cashflow < 0) {
+            isRejected = true;
+            feedbacks.push({ msg: "🚫 [투자불가] 재건축 불가 또는 현금흐름 마이너스", type: "alert" });
+        }
+        const sekisanRatio = (sekisan / (price || 1)) * 100;
+        if(sekisanRatio < 55) { score -= 28; feedbacks.push({ msg: `⚠️ 적산가 대비 매매가 높음 (적산비율 ${sekisanRatio.toFixed(0)}%)`, type: "alert" }); }
+        else if(sekisanRatio < 80) { score -= 12; feedbacks.push({ msg: `📉 적산비율 ${sekisanRatio.toFixed(0)}% - 다소 고평가`, type: "warning" }); }
+        
+        if(age > 18) score -= 12;
+        else if(age > 10) score -= 5;
+        
+        if(stationDist <= 5) score += 12;
+        else if(stationDist <= 8) score += 6;
+        else if(stationDist > 15) score -= 10;
+        
+        if(parking === 'yes') score += (areaType === 'tokyo_osaka' ? 6 : 3);
+        
+        if(window.popBonus.active) { score += 6; if(window.popBonus.growth > 0) score += 5; feedbacks.push({ msg: `🏙️ 인구증가지역 +${window.popBonus.growth > 0 ? '호재' : '안정'}`, type: "good" }); }
+        
+        if(window.hazardPenalties.length) {
+            for(let h of window.hazardPenalties) {
+                score -= h.penalty;
+                feedbacks.push({ msg: `⚠️ 재해위험: ${h.name} (-${h.penalty})`, type: "alert" });
+            }
+        }
+        // 시장 임대료와 현재 대비
+        const potentialRent = roomCount * marketRentPerRoom;
+        if(potentialRent > currentRent + 50000) { score += 7; feedbacks.push({ msg: `💹 임대료 상승여력 있음 (주변시세 대비 +${Math.round((potentialRent-currentRent)/10000)}만원)`, type: "good" }); }
+        else if(potentialRent < currentRent - 80000) { score -= 12; feedbacks.push({ msg: `📉 현재 임대료가 주변시세보다 높음 (공실 위험)`, type: "alert" }); }
+        
+        score = Math.min(100, Math.max(0, Math.round(score)));
+        if(isRejected) score = 0;
+        
+        document.getElementById('final_score').innerHTML = score + " 점";
+        const statusDiv = document.getElementById('final_status');
+        if(isRejected) { statusDiv.innerHTML = "🚨 투자 부적합"; statusDiv.style.color = "#d93025"; }
+        else if(score >= 80) { statusDiv.innerHTML = "✅ 적극 검토"; statusDiv.style.color = "#1e8e3e"; }
+        else if(score >= 60) { statusDiv.innerHTML = "⚠️ 신중 검토 필요"; statusDiv.style.color = "#f9ab00"; }
+        else { statusDiv.innerHTML = "❌ 보류 권장"; statusDiv.style.color = "#d93025"; }
+        
+        const feedbackUl = document.getElementById('feedback_list');
+        if(feedbacks.length === 0) feedbackUl.innerHTML = '<li class="good">특별한 리스크 항목 없음</li>';
+        else feedbackUl.innerHTML = feedbacks.map(f => `<li class="${f.type}">${f.msg}</li>`).join('');
+    }
 </script>
 </body>
 </html>
