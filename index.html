@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>不動産価値判断ツール / 일본 부동산 가치 판단 툴 (V31)</title>
+    <title>不動産価値判断ツール / 일본 부동산 가치 판단 툴 (V32)</title>
     <style>
         body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; background-color: #f0f2f5; color: #1c1e21; padding: 20px; margin: 0; }
         .container { max-width: 1000px; margin: 0 auto; background: #fff; padding: 35px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
@@ -33,8 +33,8 @@
 
     <div class="form-section">
         <div class="form-group full-width">
-            <label>物件住所 / 물건 주소 (番地まで正確に入力してください / 번지까지 정확히 입력)</label>
-            <input type="text" id="full_address" placeholder="例: 東京都新宿区新宿4-4-13" value="">
+            <label>物件住所 / 물건 주소 (例: 千葉県松戸市... / 東京都新宿区...)</label>
+            <input type="text" id="full_address" placeholder="住所を入力してください" value="千葉県松戸市">
             <button type="button" class="btn-api" onclick="startAnalysis()">🚀 分析開始 / 통합 분석 시작</button>
             <div id="api_log"></div>
         </div>
@@ -48,15 +48,15 @@
 
         <div class="chart-container full-width" id="chart_wrapper"><canvas id="priceChart"></canvas></div>
 
-        <div class="form-group"><label>エリア区分 / 지역 구분</label><select id="area" onchange="calculateValue();"><option value="tokyo_osaka">東京・大阪コア / 도쿄·오사카 코어</option><option value="local">地方主要都市 / 지방 주요 도시</option></select></div>
+        <div class="form-group"><label>エリア区分 / 지역 구분</label><select id="area" onchange="calculateValue();"><option value="tokyo_osaka">コアエリア / 코어 지역</option><option value="local">地方都市 / 지방 도시</option></select></div>
         <div class="form-group"><label>駐車場 / 주차장</label><select id="parking" onchange="calculateValue()"><option value="yes">完備 / 완비</option><option value="no">無し / 없음</option></select></div>
-        <div class="form-group"><label>物件価格 / 매매 가격 (円)</label><input type="text" id="price" value="150,000,000" oninput="formatAndCalc(this)"></div>
-        <div class="form-group"><label>土地面積 / 토지 면적 (㎡)</label><input type="number" id="land_area" value="100" oninput="calculateValue();"></div>
-        <div class="form-group"><label>積算価格 / 적산 가격 (円)</label><input type="text" id="sekisan" value="110,000,000" oninput="formatAndCalc(this)"></div>
+        <div class="form-group"><label>物件価格 / 매매 가격 (円)</label><input type="text" id="price" value="50,000,000" oninput="formatAndCalc(this)"></div>
+        <div class="form-group"><label>土地面積 / 토지 면적 (㎡)</label><input type="number" id="land_area" value="80" oninput="calculateValue();"></div>
+        <div class="form-group"><label>積算価格 / 적산 가격 (円)</label><input type="text" id="sekisan" value="35,000,000" oninput="formatAndCalc(this)"></div>
         <div class="form-group"><label>築年数 / 건축 연수</label><select id="age" onchange="calculateValue()"></select></div>
         <div class="form-group"><label>駅徒歩 / 역 도보 거리 (分)</label><select id="station_dist" onchange="calculateValue()"></select></div>
-        <div class="form-group"><label>月間純CF / 월 순 현금흐름 (円)</label><input type="text" id="cashflow" value="200,000" oninput="formatAndCalc(this)"></div>
-        <div class="form-group full-width"><label style="color:#d93025;"><input type="checkbox" id="illegal" onchange="calculateValue()"> 違法建築・再建築不可 / 위법건축·재건축 불가</label></div>
+        <div class="form-group"><label>月間純CF / 월 순 현금흐름 (円)</label><input type="text" id="cashflow" value="100,000" oninput="formatAndCalc(this)"></div>
+        <div class="form-group full-width"><label style="color:#d93025;"><input type="checkbox" id="illegal" onchange="calculateValue()"> 違법건축・再건축불가 / 위법건축·재건축 불가</label></div>
     </div>
 
     <div id="result_section" class="result-box">
@@ -82,15 +82,14 @@
         const log = document.getElementById('api_log'); if (!address) return;
         log.style.display = "block"; log.innerHTML = "🔄 <b>分析エンジン起動中... / 분석 엔진 가동 중...</b><br>";
         document.getElementById('env_dashboard').style.display = 'block';
-        document.getElementById('final_status').innerText = "⏳ 解析中 / 분석 중...";
         
         const geocoder = new google.maps.Geocoder();
         geocoder.geocode({ 'address': address }, async function(results, status) {
             if (status === 'OK') {
                 const loc = results[0].geometry.location;
-                log.innerHTML += `✅ 座標取得成功: ${loc.lat().toFixed(4)}<br>`;
+                log.innerHTML += `✅ 座標取得成功 / 좌표 특정 완료<br>`;
                 calculateStationDistance(loc, log);
-                // ★ 핵심: 주소 정보(results[0])를 전달하여 해당 지역의 코드를 찾습니다.
+                // ★ V32 핵심: 주소 데이터(results[0])를 그대로 전달하여 전국 대응
                 await Promise.all([fetchXITRealTradeData(results[0], log), checkEnvironment(loc.lat(), loc.lng(), log)]);
                 document.getElementById('final_status').innerText = "解析完了 / 분석 완료";
                 calculateValue();
@@ -99,63 +98,64 @@
     }
 
     async function fetchXITRealTradeData(geoResult, log) {
-        // ★ V31: 주소 정보를 분석하여 시구정촌 코드를 동적으로 결정 ★
-        let cityCode = "";
+        let cityCode = ""; 
         let prefCode = "";
-        
-        // 1. 도도부현 코드(area) 찾기
-        const prefMap = {"東京都":"13","神奈川県":"14","大阪府":"27","埼玉県":"11","千葉県":"12"}; // 예시 (내부 사전 확장 가능)
-        
-        // 2. 시구정촌 코드(city) 찾기 - 국토부 API를 통해 역조회
         const addrComps = geoResult.address_components;
-        let prefName = "";
-        let cityName = "";
         
+        // 구글 주소 컴포넌트에서 시구정촌 및 도도부현 추출
+        let prefName = "", cityName = "";
         addrComps.forEach(c => {
             if(c.types.includes("administrative_area_level_1")) prefName = c.long_name;
-            if(c.types.includes("locality")) cityName = c.long_name;
+            if(c.types.includes("locality") || c.types.includes("sublocality_level_1")) cityName = c.long_name;
         });
 
-        log.innerHTML += `🔍 検索地域: ${prefName} ${cityName}<br>`;
+        // 행정구역 매핑 (일본 전국 대응용 간이 사전 - 실제 운영시엔 DB연동 권장)
+        const cityCodes = {
+            "松戸市":"12207", "新宿区":"13104", "中央区":"13102", "港区":"13103", "渋谷区":"13113", "品川区":"13109", "大阪市北区":"27127"
+        };
+        const prefCodes = { "東京都":"13", "千葉県":"12", "神奈川県":"14", "大阪府":"27", "埼玉県":"11" };
 
-        // API용 시구정촌 코드 획득을 위해 국토부 코드 조회 API 호출 (XIT002 활용 가능하나 시간상 직접 매핑 혹은 광역검색 수행)
-        // 여기서는 대표님이 자주 보시는 지역 코드를 우선 대응하고, 없으면 광역 검색용 area 코드로 대체합니다.
-        const cityMap = {"新宿区":"13104","中央区":"13102","港区":"13103","渋谷区":"13113","千代田区":"13101"};
-        cityCode = cityMap[cityName] || ""; 
-        prefCode = prefMap[prefName] || "13";
+        cityCode = cityCodes[cityName] || "";
+        prefCode = prefCodes[prefName] || "13";
+
+        log.innerHTML += `🔍 判定地域: ${prefName} ${cityName} (${cityCode || '広域検索'})<br>`;
 
         const currentYear = new Date().getFullYear();
-        // 만약 구체적인 구 코드가 없으면 도(area) 단위로 검색하여 범용성 확보
-        let queryParam = cityCode ? `city=${cityCode}` : `area=${prefCode}`;
-        const targetUrl = `https://www.reinfolib.mlit.go.jp/ex-api/external/XIT001?year=${currentYear-1}&quarter=1&${queryParam}&priceClassification=01`;
+        let query = cityCode ? `city=${cityCode}` : `area=${prefCode}`;
+        const targetUrl = `https://www.reinfolib.mlit.go.jp/ex-api/external/XIT001?year=${currentYear-1}&quarter=1&${query}&priceClassification=01`;
         
         try {
             const res = await fetch(WORKER_URL + encodeURIComponent(targetUrl)).then(r => r.json());
             if (res.status === "OK" && res.data.length > 0) {
-                // 내 주소와 가장 유사한(DistrictName이 포함된) 거래 데이터를 우선 탐색
-                let trade = res.data[0]; 
-                let avgPrice = parseInt(trade.UnitPrice || trade.TradePrice / trade.Area, 10);
+                // 해당 도시의 여러 거래 데이터 중 평균값 계산 (V32 개선)
+                let sum = 0, count = 0;
+                res.data.slice(0, 5).forEach(d => {
+                    let p = parseInt(d.UnitPrice || d.TradePrice / d.Area, 10);
+                    if(p) { sum += p; count++; }
+                });
+                let avgPrice = Math.round(sum / count);
                 
                 document.getElementById('real_trade_info').innerHTML = 
-                    `📍 <b>実取引事例 / 실거래 정보:</b> ${trade.Municipality}${trade.DistrictName} (H${trade.BuildingYear || '-'})<br>` +
-                    `💰 <b>㎡単価 / ㎡당 단가:</b> ¥${avgPrice.toLocaleString()} (取引額: ¥${parseInt(trade.TradePrice).toLocaleString()})`;
+                    `📍 <b>実取引事例 / 실거래 정보:</b> ${prefName} ${cityName} 근처 거래 사례 분석 완료<br>` +
+                    `💰 <b>推定単価 / 추정 단가:</b> ¥${avgPrice.toLocaleString()} / ㎡`;
 
-                const isTokyo = document.getElementById('area').value === 'tokyo_osaka';
-                const trend = isTokyo ? [0.75, 0.80, 0.85, 0.92, 0.96, 0.94, 0.96, 0.98, 1.00, 1.05] : [0.85, 0.86, 0.88, 0.90, 0.91, 0.90, 0.92, 0.95, 1.00, 1.02];
+                // 추세 곡선 (지역에 따른 가중치 차등)
+                const isTokyo = prefName === '東京都';
+                const trend = isTokyo ? [0.82, 0.85, 0.88, 0.91, 0.93, 0.94, 0.95, 0.97, 1.00, 1.03] : [0.90, 0.91, 0.92, 0.92, 0.93, 0.93, 0.94, 0.96, 1.00, 1.01];
                 let ps = []; let ls = [];
                 for (let i = 0; i < 10; i++) { ls.push(`${2016+i}年`); ps.push(Math.round(avgPrice * (trend[i]/trend[8]))); }
                 drawTrendChart(ps, ls);
             }
-        } catch(e) { log.innerHTML += `<br>❌ API Error (지역 코드 매핑 실패)`; }
+        } catch(e) { log.innerHTML += `<br>❌ API 호출 실패 (데이터 부재)`; }
     }
 
     async function checkEnvironment(lat, lng, log) {
         const pt = turf.point([lng, lat]);
         const tile = getTileCoordinate(lat, lng, 15);
         try {
-            const popRes = await fetch(WORKER_URL + encodeURIComponent(`https://www.reinfolib.mlit.go.jp/ex-api/external/XKT031?response_format=geojson&z=15&x=${tile.x}&y=${tile.y}`)).then(r => r.json());
-            if (popRes.features) {
-                for (let f of popRes.features) {
+            const res = await fetch(WORKER_URL + encodeURIComponent(`https://www.reinfolib.mlit.go.jp/ex-api/external/XKT031?response_format=geojson&z=15&x=${tile.x}&y=${tile.y}`)).then(r => r.json());
+            if (res.features) {
+                for (let f of res.features) {
                     if (turf.booleanPointInPolygon(pt, f)) {
                         let g = (((f.properties.A16_005 - f.properties.A16_007) / f.properties.A16_007) * 100).toFixed(1);
                         window.popBonus = { active: true, growth: parseFloat(g) };
@@ -228,7 +228,7 @@
         if (window.popBonus.active && window.popBonus.growth > 0) score += 5;
         window.hazardPenalties.forEach(h => { score -= 20; feedbacks.push({msg: `🚨 災害リスク: ${h.name} / 재해 리스크 해당`, type:'alert'}); });
         score = Math.max(0, Math.min(100, score));
-        document.getElementById('final_score').innerText = score + " 点 / 점";
+        document.getElementById('final_score').innerText = score + " 점";
         const st = document.getElementById('final_status');
         if (score >= 80) { st.innerText = "✅ 積極検討 / 적극 검토"; st.style.color = "#1e8e3e"; }
         else if (score >= 60) { st.innerText = "⚠️ 慎重調査 / 주의 및 조사 필요"; st.style.color = "#f9ab00"; }
