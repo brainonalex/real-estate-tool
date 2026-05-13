@@ -237,7 +237,7 @@
                 const targetYear = currentYear - i;
                 // 타일 좌표(z/x/y)가 포함된 완벽한 국토성 API URL
                 const targetUrl = `https://www.reinfolib.mlit.go.jp/ex-api/external/XPT002/${tile.z}/${tile.x}/${tile.y}?year=${targetYear}&response_format=geojson`;
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
                 
                 const response = await fetch(proxyUrl, {
                     method: 'GET',
