@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>不動産投資 価値判断ツール (V15)</title>
+    <title>不動産投資 価値判断ツール (V16)</title>
     <link rel="icon" type="image/png" href="logo.png">
     <style>
         body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; background-color: #f0f2f5; color: #1c1e21; padding: 20px; margin: 0; }
@@ -63,7 +63,7 @@
 <div class="container">
     <div class="header-container">
         <img src="logo.png" alt="Profile Logo" class="header-logo" onerror="this.style.display='none'">
-        <h1>不動産投資 価値判断ツール (V15)</h1>
+        <h1>不動産投資 価値判断ツール (V16)</h1>
     </div>
     
     <div class="form-section">
@@ -85,7 +85,7 @@
 
         <div class="form-group full-width">
             <label>物件住所 (물건 주소 입력)</label>
-            <input type="text" id="address" placeholder="例: 東京都渋谷区上原3丁目">
+            <input type="text" id="address" placeholder="例: 東京都新宿区新宿4丁目">
             
             <button type="button" class="btn-api" onclick="fetchLocationAndLandPrice()">📍 地価推移・駅徒歩・ハザード自動取得</button>
             <div id="api_log"></div>
@@ -185,7 +185,7 @@
     let priceChart = null;
     window.hazardPenalties = []; 
 
-    // ★ 대표님 전용 Cloudflare 개인 우회 서버 주소 (완벽 적용) ★
+    // 대표님 개인 Cloudflare 서버 (정상 가동 확인 완료)
     const WORKER_URL = "https://falling-pond-d864.alexall1972.workers.dev/?url=";
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -249,8 +249,9 @@
         let prices = [];
         let labels = [];
         const tile = getTileCoordinate(lat, lng, 15);
+        const pt = turf.point([lng, lat]); // 내 물건지의 정확한 좌표
         
-        log.innerHTML += `🔄 <b>国土交通省API</b>: 地価データを取得中...<br>`;
+        log.innerHTML += `🔄 <b>国土交通省API</b>: 最寄りの地価データを探索中...<br>`;
 
         try {
             const startYear = currentYear - 1; 
@@ -258,7 +259,6 @@
                 const targetYear = startYear - i;
                 const targetUrl = `https://www.reinfolib.mlit.go.jp/ex-api/external/XPT002?year=${targetYear}&response_format=geojson&z=${tile.z}&x=${tile.x}&y=${tile.y}`;
                 
-                // ★ 대표님 개인 서버(WORKER_URL)를 통해 안전하게 우회 접속 ★
                 const response = await fetch(WORKER_URL + encodeURIComponent(targetUrl));
                 
                 if (response.ok) {
@@ -266,7 +266,22 @@
                     let extractedPrice = 0; 
                     
                     if (data.features && data.features.length > 0) {
-                        let props = data.features[0].properties;
+                        // ★ V16 수정: 타일 안의 모든 지가 데이터 중 '내 핀과 가장 가까운' 데이터를 찾는 로직 ★
+                        let closestFeature = data.features[0];
+                        let minDistance = Infinity;
+                        
+                        for (let f of data.features) {
+                            if (f.geometry && f.geometry.type === 'Point') {
+                                let fPoint = turf.point(f.geometry.coordinates);
+                                let d = turf.distance(pt, fPoint);
+                                if (d < minDistance) {
+                                    minDistance = d;
+                                    closestFeature = f;
+                                }
+                            }
+                        }
+
+                        let props = closestFeature.properties;
                         extractedPrice = props.price || props.L01_006 || props.L02_006 || 0;
                         if (!extractedPrice) {
                             for (let key in props) {
@@ -291,12 +306,12 @@
             }
 
             drawTrendChart(prices, labels);
-            log.innerHTML += `✅ <b>地価推移</b>: 実データ取得完了！<br>`;
+            log.innerHTML += `✅ <b>地価推移</b>: 直近の標準地データ取得完了！<br>`;
             document.getElementById('land_price_info').innerHTML = `💡 取得した最新の公示地価は <b>¥${prices[prices.length-1].toLocaleString()}/㎡</b> です。`;
             document.getElementById('land_price_info').style.color = "#d93025";
 
         } catch (error) {
-            log.innerHTML += `<span style="color:#d93025;">❌ 個人サーバー設定エラー(${error.message})</span><br>`;
+            log.innerHTML += `<span style="color:#d93025;">❌ サーバーエラー(${error.message})</span><br>`;
             const areaType = document.getElementById('area').value;
             let mockPrices = areaType === 'tokyo_osaka' ? [1250000, 1280000, 1310000, 1360000, 1420000] : [150000, 148000, 145000, 144000, 142000];
             const startYear = currentYear - 1;
@@ -317,13 +332,12 @@
         ];
 
         let resultsHTML = "";
-        log.innerHTML += `🔄 <b>国土交通省API</b>: ハザードマップ解析中...<br>`;
+        log.innerHTML += `🔄 <b>国土交通省API</b>: ハザードマップ精密解析中...<br>`;
 
         for (let h of hazards) {
             const targetUrl = `https://www.reinfolib.mlit.go.jp/ex-api/external/${h.id}?response_format=geojson&z=${tile.z}&x=${tile.x}&y=${tile.y}`;
 
             try {
-                // ★ 대표님 개인 서버(WORKER_URL)를 통해 안전하게 우회 접속 ★
                 const response = await fetch(WORKER_URL + encodeURIComponent(targetUrl));
                 let isDangerous = false;
 
@@ -333,9 +347,21 @@
                         for (let feature of data.features) {
                             if (feature.geometry && (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
                                 if (turf.booleanPointInPolygon(pt, feature)) {
-                                    window.hazardPenalties.push(h);
-                                    isDangerous = true;
-                                    break;
+                                    // ★ V16 수정: 액상화(XKT025)는 속성을 까보고 '위험'할 때만 판정 ★
+                                    if (h.id === 'XKT025') {
+                                        const note = feature.properties.note || "";
+                                        // 국토부 데이터상 'しやすい(하기 쉬움)' 등이 포함되어 있거나 레벨이 높을 경우 위험
+                                        if (note.includes('しやすい') || note.includes('極めて')) {
+                                            window.hazardPenalties.push(h);
+                                            isDangerous = true;
+                                            break;
+                                        }
+                                    } else {
+                                        // 홍수, 쓰나미는 폴리곤 안에 있으면 즉시 위험 판정
+                                        window.hazardPenalties.push(h);
+                                        isDangerous = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -347,10 +373,10 @@
                         resultsHTML += `<div style="color:#1e8e3e; margin-bottom:8px;">✅ ${h.name} : 範囲外 (安全)</div>`;
                     }
                 } else {
-                    resultsHTML += `<div style="color:#f9ab00; margin-bottom:8px;">⚠️ ${h.name} : アクセスエラー</div>`;
+                    resultsHTML += `<div style="color:#f9ab00; margin-bottom:8px;">⚠️ ${h.name} : APIアクセス制限で確認不可</div>`;
                 }
             } catch(e) {
-                resultsHTML += `<div style="color:#d93025; margin-bottom:8px;">❌ サーバー接続エラー</div>`;
+                resultsHTML += `<div style="color:#d93025; margin-bottom:8px;">❌ ${h.name} : サーバー接続エラー</div>`;
             }
         }
         
