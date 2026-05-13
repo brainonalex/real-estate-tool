@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>不動産投資 価値判断ツール (V23)</title>
+    <title>不動産投資 価値判断ツール (V24)</title>
     <link rel="icon" type="image/png" href="logo.png">
     <style>
         body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; background-color: #f0f2f5; color: #1c1e21; padding: 20px; margin: 0; }
@@ -44,21 +44,21 @@
 <div class="container">
     <div class="header-container">
         <img src="logo.png" alt="Logo" class="header-logo" onerror="this.style.display='none'">
-        <h1>不動산投資 価値判断ツール (V23)</h1>
+        <h1>不動産投資 価値判断ツール (V24)</h1>
     </div>
     <div class="form-section">
         <div class="form-group"><label>エリア (지역)</label><select id="area" onchange="calculateValue();"><option value="tokyo_osaka">東京/大阪コアエリア</option><option value="local">地方主要都市</option></select></div>
         <div class="form-group" id="parking_group"><label>駐車場 (주차장)</label><select id="parking" onchange="calculateValue()"><option value="yes">完備</option><option value="no">無し</option></select></div>
         
         <div class="form-group full-width">
-            <label>物件住所 (주소 입력: 숫자와 하이픈만으로도 가능)</label>
-            <input type="text" id="full_address" placeholder="例: 東京都新宿区新宿4-4-13" value="東京都新宿区新宿4-4-13">
-            <button type="button" class="btn-api" onclick="fetchLocationAndLandPrice()">📍 10年地価・人口・ハザード自動解析</button>
+            <label>物件住所 (지번 주소: 번지수까지 정확히 입력)</label>
+            <input type="text" id="full_address" placeholder="例: 東京都新宿区新宿4-4-13" value="">
+            <button type="button" class="btn-api" onclick="fetchLocationAndLandPrice()">📍 原本データ抽出・ハザード自動解析</button>
             <div id="api_log"></div>
             <div id="env_dashboard">
-                <h3 class="dashboard-title">📊 投資環境＆災害リスク (周辺データAI解析)</h3>
-                <div id="pop_content">人口データを取得中...</div>
-                <div id="hazard_content">ハザードデータを取得中...</div>
+                <h3 class="dashboard-title">📊 投資環境＆災害リスク (원본 데이터 직송)</h3>
+                <div id="pop_content">データを取得中...</div>
+                <div id="hazard_content">データを取得中...</div>
             </div>
             <div class="chart-container" id="chart_wrapper"><canvas id="landPriceChart"></canvas></div>
         </div>
@@ -81,7 +81,7 @@
         <div class="score-circle" id="final_score">0点</div>
         <ul class="details-list" id="feedback_list"></ul>
     </div>
-    <div class="credit-text">提供情報の最新性、正確性、完全性を保証するものではありません。</div>
+    <div class="credit-text">国土交通省の「不動産情報ライブラリ」APIの生データを使用しています。</div>
 </div>
 
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyASsw6ve3g5GFOKp-gQYZ7Rd_7FSBe0vEk&libraries=places"></script>
@@ -106,21 +106,14 @@
         return { z: zoom, x: x, y: y };
     }
 
-    // 주소 정규화 (전각 숫자 -> 반각, 숫자 형변환 등)
-    function normalizeAddress(str) {
-        return str.replace(/[０-９]/g, function(s) {
-            return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
-        }).replace(/[-－ー]/g, '-');
-    }
-
     function fetchLocationAndLandPrice() {
-        const address = normalizeAddress(document.getElementById('full_address').value);
+        const address = document.getElementById('full_address').value;
         const log = document.getElementById('api_log'); 
         if (!address) { alert('住所を入力してください。'); return; }
 
-        log.style.display = "block"; log.innerHTML = "🔄 <b>Google Maps API</b>: 주소 정규화 및 좌표 추출 중...<br>";
+        log.style.display = "block"; log.innerHTML = "🔄 <b>Google Maps API</b>: 座標抽出中...<br>";
         document.getElementById('env_dashboard').style.display = 'block';
-        document.getElementById('final_status').innerText = "⏳ APIデータ取得・AI解析中...";
+        document.getElementById('final_status').innerText = "⏳ データの原本を取得中...";
         
         const geocoder = new google.maps.Geocoder();
         geocoder.geocode({ 'address': address }, function(results, status) {
@@ -130,8 +123,8 @@
                 log.innerHTML += `✅ 座標取得成功 (Lat: ${lat.toFixed(4)})<br><hr style="border: 0.5px solid #ccc; margin:10px 0;">`;
                 calculateStationDistance(location, log);
                 Promise.all([fetchMLITLandPrice(lat, lng, log), checkEnvironment(lat, lng, log)]).then(() => {
-                    log.innerHTML += `🎉 <b>すべての解析が完了しました！</b>`;
-                    document.getElementById('final_status').innerText = "解析完了。スコ아算出中...";
+                    log.innerHTML += `🎉 <b>すべての生データの取得が完了しました！</b>`;
+                    document.getElementById('final_status').innerText = "解析完了";
                     calculateValue();
                 });
             } else { 
@@ -142,12 +135,14 @@
         });
     }
 
+    // ★ V24 수정: 가짜 보정 없이 '진짜 원본'만 추적 ★
     async function fetchMLITLandPrice(lat, lng, log) {
         const currentYear = new Date().getFullYear(); 
         const tile = getTileCoordinate(lat, lng, 15); 
         const pt = turf.point([lng, lat]);
-        log.innerHTML += `🔄 <b>国土交通省API</b>: 최신 공시지가 데이터 및 10년 추이 분석 중...<br>`;
+        log.innerHTML += `🔄 <b>国土交通省API</b>: ピンポイントで原本データを探索中...<br>`;
 
+        // 9개 타일 융단폭격
         const tiles = [
             {x: tile.x, y: tile.y}, {x: tile.x-1, y: tile.y}, {x: tile.x+1, y: tile.y},
             {x: tile.x, y: tile.y-1}, {x: tile.x, y: tile.y+1}, {x: tile.x-1, y: tile.y-1}, 
@@ -155,53 +150,49 @@
         ];
 
         try {
-            // 국토부 데이터는 연도 요청을 무시하는 경향이 있으므로, 각 연도별 개별 포인트 데이터를 직접 쿼리합니다.
-            const years = Array.from({length: 10}, (_, i) => currentYear - 1 - i).reverse();
-            let prices = []; let labels = [];
-
-            // 대표 지점 1곳 선정 (최신 연도 기준 가장 가까운 곳)
-            let targetYear = currentYear - 1;
-            const tilePromises = tiles.map(t => {
-                const targetUrl = `https://www.reinfolib.mlit.go.jp/ex-api/external/XPT002?year=${targetYear}&response_format=geojson&z=15&x=${t.x}&y=${t.y}&_cb=${Date.now()}`;
-                return fetch(WORKER_URL + encodeURIComponent(targetUrl)).then(r => r.ok ? r.json() : null).catch(() => null);
-            });
-            const resArray = await Promise.all(tilePromises);
-            
-            let minDistance = Infinity;
-            let targetPointId = null;
-            let latestPrice = 0;
-
-            for (let data of resArray) {
-                if (data && data.features) {
-                    for (let f of data.features) {
-                        let d = turf.distance(pt, turf.point(f.geometry.coordinates));
-                        let p = parseInt(f.properties.L01_006 || f.properties.L02_006, 10);
-                        if (p > 0 && d < minDistance) {
-                            minDistance = d;
-                            targetPointId = f.properties.L01_001 || f.properties.L02_001; // 표준지 번호
-                            latestPrice = p;
+            // 10년치 데이터를 각각 '있는 그대로' 요청
+            const years = Array.from({length: 10}, (_, i) => currentYear - 1 - i);
+            const yearPromises = years.map(async (y) => {
+                const tilePromises = tiles.map(t => {
+                    const targetUrl = `https://www.reinfolib.mlit.go.jp/ex-api/external/XPT002?year=${y}&response_format=geojson&z=15&x=${t.x}&y=${t.y}&_cb=${Date.now()}`;
+                    return fetch(WORKER_URL + encodeURIComponent(targetUrl)).then(r => r.ok ? r.json() : null).catch(() => null);
+                });
+                const resArray = await Promise.all(tilePromises);
+                
+                let minD = Infinity; let bestP = 0;
+                for (let data of resArray) {
+                    if (data && data.features) {
+                        for (let f of data.features) {
+                            let d = turf.distance(pt, turf.point(f.geometry.coordinates));
+                            // L01_006(공시지가) 또는 L02_006(기준지가)만 원본으로 인정
+                            let p = parseInt(f.properties.L01_006 || f.properties.L02_006, 10);
+                            if (p > 0 && d < minD) { minD = d; bestP = p; }
                         }
                     }
                 }
+                return { year: y, price: bestP };
+            });
+
+            const results = await Promise.all(yearPromises);
+            results.sort((a, b) => a.year - b.year); // 2016 -> 2025 순 정렬
+
+            let prices = []; let labels = [];
+            for (let res of results) {
+                labels.push(`${res.year}年`);
+                prices.push(res.price || 0); // 데이터 없으면 0 (가공 안 함)
             }
 
-            if (!latestPrice) latestPrice = (document.getElementById('area').value === 'tokyo_osaka' ? 1200000 : 150000);
-
-            // 해당 지점의 10년치를 시뮬레이션 하지 않고, 실제 국토부 트렌드를 반영 (V23 수정: 주거/상업 데이터 구분)
-            // 사실 국토부 API가 특정 지점의 10년치를 한 번에 안 주기 때문에, 해당 지역의 연도별 공시지가 평균 변동률을 적용하는 것이 현재 가장 정확합니다.
-            const isTokyo = document.getElementById('area').value === 'tokyo_osaka';
-            const tokyoIndex = [0.82, 0.85, 0.88, 0.91, 0.93, 0.94, 0.95, 0.97, 1.00, 1.03]; // 도쿄 10년 실질 공시지가 지수
-            const localIndex = [0.90, 0.91, 0.92, 0.92, 0.93, 0.93, 0.94, 0.96, 1.00, 1.01];
-            const activeIndex = isTokyo ? tokyoIndex : localIndex;
-
-            for (let i = 0; i < 10; i++) {
-                labels.push(`${years[i]}年`);
-                prices.push(Math.round(latestPrice * (activeIndex[i] / activeIndex[8])));
+            // 모든 연도가 0이면(데이터 없음) 기본값 딱 하나만 출력해서 경고
+            if (prices.every(p => p === 0)) {
+                prices = prices.map(() => (document.getElementById('area').value === 'tokyo_osaka' ? 1200000 : 150000));
+                log.innerHTML += `<span style="color:#d93025">⚠️ 近방 1.5km 내에 표준지 데이터가 없어 기본값을 표시합니다.</span><br>`;
             }
 
             drawTrendChart(prices, labels);
-            document.getElementById('land_price_info').innerHTML = `💡 直近公示地価(最寄り地点): <b>¥${latestPrice.toLocaleString()}/㎡</b>`;
-        } catch (e) { log.innerHTML += `❌ 地価解析エラー<br>`; }
+            const latestP = prices[prices.length - 1];
+            document.getElementById('land_price_info').innerHTML = `💡 抽出された原本 公示地価: <b>¥${latestP.toLocaleString()}/㎡</b>`;
+            document.getElementById('land_price_info').style.color = "#d93025";
+        } catch (e) { log.innerHTML += `❌ API解析エラー<br>`; }
     }
 
     async function checkEnvironment(lat, lng, log) {
@@ -209,24 +200,22 @@
         const pt = turf.point([lng, lat]);
         const tile = getTileCoordinate(lat, lng, 15);
         
-        // 인구 데이터
         const popUrl = `https://www.reinfolib.mlit.go.jp/ex-api/external/XKT031?response_format=geojson&z=${tile.z}&x=${tile.x}&y=${tile.y}&_cb=${Date.now()}`;
         try {
             const popRes = await fetch(WORKER_URL + encodeURIComponent(popUrl)).then(r => r.json());
-            let growth = "0";
+            let growth = "0"; let found = false;
             if (popRes.features) {
                 for (let f of popRes.features) {
                     if (turf.booleanPointInPolygon(pt, f)) {
                         growth = (((f.properties.A16_005 - f.properties.A16_007) / f.properties.A16_007) * 100).toFixed(1);
                         window.popBonus = { active: true, growth: parseFloat(growth) };
-                        break;
+                        found = true; break;
                     }
                 }
             }
-            popContent.innerHTML = window.popBonus.active ? `🏙️ 人口集中地区: 該当 / 📈 増加率: <b>${growth}%</b>` : `🏡 人口集中地区: 範囲外`;
+            popContent.innerHTML = found ? `🏙️ 人口集中地区: 該当 / 📈 増加率: <b>${growth}%</b>` : `🏡 人口集中地区: 範囲外`;
         } catch(e) { popContent.innerHTML = "人口データ取得不可"; }
 
-        // 해저드 (홍수, 쓰나미, 액상화)
         const hazards = [{id:'XKT026', name:'洪水'}, {id:'XKT028', name:'津波'}, {id:'XKT025', name:'液状化'}];
         let hHtml = ""; window.hazardPenalties = [];
         for (let h of hazards) {
@@ -242,7 +231,7 @@
                         }
                     }
                 }
-                hHtml += isD ? `<span style="color:#d93025">❌ ${h.name} : 該当</span> ` : `<span style="color:#1e8e3e">✅ ${h.name} : 安全</span> `;
+                hHtml += isD ? `<span style="color:#d93025">❌ ${h.name}: 該当</span> ` : `<span style="color:#1e8e3e">✅ ${h.name}: 安全</span> `;
             } catch(e) {}
         }
         hazardContent.innerHTML = hHtml;
@@ -254,7 +243,7 @@
             if (st === google.maps.places.PlacesServiceStatus.OK && p.length > 0) {
                 const ds = new google.maps.DistanceMatrixService();
                 ds.getDistanceMatrix({ origins: [l], destinations: [p[0].geometry.location], travelMode: 'WALKING' }, function(dr, ds) {
-                    if (ds === 'OK') {
+                    if (ds === 'OK' && dr.rows[0].elements[0].status === 'OK') {
                         let m = Math.ceil(dr.rows[0].elements[0].duration.value / 60);
                         document.getElementById('station_dist').value = m > 50 ? 50 : m;
                         if(!window.stationCalculated) { log.innerHTML += `✅ <b>駅徒歩</b>: [${p[0].name}] ${m}分<br>`; window.stationCalculated = true; }
@@ -269,7 +258,7 @@
         document.getElementById('chart_wrapper').style.display = 'block'; const ctx = document.getElementById('landPriceChart').getContext('2d');
         if(priceChart) priceChart.destroy();
         priceChart = new Chart(ctx, {
-            type: 'line', data: { labels: l, datasets: [{ label: '公示地価 (円/㎡)', data: p, borderColor: '#d93025', backgroundColor: 'rgba(217, 48, 37, 0.1)', fill: true, tension: 0.1 }] },
+            type: 'line', data: { labels: l, datasets: [{ label: '原本 公示地価 (円/㎡)', data: p, borderColor: '#d93025', backgroundColor: 'rgba(217, 48, 37, 0.1)', fill: true, tension: 0.1, borderWidth: 3 }] },
             options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false, ticks: { callback: v => v.toLocaleString() + '円' } } } }
         });
     }
@@ -280,7 +269,7 @@
         let a = parseFloat(document.getElementById('land_area').value) || 0; const u = document.getElementById('land_unit').value;
         if (a > 0 && p > 0) {
             let m2 = (u === 'tsubo') ? a * 3.30578 : a; let ts = (u === 'm2') ? a / 3.30578 : a;
-            document.getElementById('land_price_info').innerHTML = `㎡単価: ¥${Math.round(p / m2).toLocaleString()} / 坪単価: ¥${Math.round(p / ts).toLocaleString()}`;
+            document.getElementById('land_price_info').innerHTML = `㎡単가: ¥${Math.round(p / m2).toLocaleString()} / 坪단가: ¥${Math.round(p / ts).toLocaleString()}`;
         }
     }
 
