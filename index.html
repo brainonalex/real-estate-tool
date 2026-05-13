@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>不動産投資 価値判断ツール (V10)</title>
+    <title>不動産投資 価値判断ツール (V11)</title>
     <link rel="icon" type="image/png" href="logo.png">
     <style>
         body { font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif; background-color: #f0f2f5; color: #1c1e21; padding: 20px; margin: 0; }
@@ -25,7 +25,7 @@
         
         .btn-api { background-color: #34a853; color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 10px; transition: 0.3s; }
         .btn-api:hover { background-color: #2b8c45; }
-        #api_log { font-size: 13px; color: #1a73e8; margin-top: 10px; font-weight: bold; line-height: 1.5; }
+        #api_log { font-size: 13px; color: #1a73e8; margin-top: 10px; font-weight: bold; line-height: 1.5; background: #e8f0fe; padding: 15px; border-radius: 8px; display: none; }
         .chart-container { position: relative; height: 250px; width: 100%; margin-top: 15px; display: none; background: #fafafa; border: 1px solid #ddd; border-radius: 8px; padding: 10px; box-sizing: border-box; }
 
         .result-box { margin-top: 20px; padding: 30px; border-radius: 12px; border: 2px solid #eee; display: block; background-color: #f8f9fa; }
@@ -49,14 +49,16 @@
             h1 { font-size: 20px; }
         }
     </style>
+    <!-- 그래프 및 공간 좌표 계산(Turf.js) 라이브러리 추가 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 </head>
 <body>
 
 <div class="container">
     <div class="header-container">
         <img src="logo.png" alt="Profile Logo" class="header-logo" onerror="this.style.display='none'">
-        <h1>不動産投資 価値判断ツール (V10)</h1>
+        <h1>不動産投資 価値判断ツール (V11)</h1>
     </div>
     
     <div class="form-section">
@@ -79,7 +81,8 @@
         <div class="form-group full-width">
             <label>物件住所 (물건 주소 입력)</label>
             <input type="text" id="address" placeholder="例: 東京都渋谷区上原3丁目">
-            <button type="button" class="btn-api" onclick="fetchLocationAndLandPrice()">📍 地価推移と駅徒歩を自動取得 (공시지가/도보 가져오기)</button>
+            <button type="button" class="btn-api" onclick="fetchLocationAndLandPrice()">📍 地価推移・駅徒歩・ハザード自動取得</button>
+            <!-- 로그 박스 영역 추가 -->
             <div id="api_log"></div>
             <div class="chart-container" id="chart_wrapper">
                 <canvas id="landPriceChart"></canvas>
@@ -170,6 +173,7 @@
 <script>
     let priceChart = null;
     const MLIT_API_KEY = "96db5252d20141a093fe386cdfc25d2e";
+    window.hazardPenalties = []; // 해저드맵 감점 기록용 전역 변수
 
     document.addEventListener('DOMContentLoaded', function() {
         const ageSelect = document.getElementById('age');
@@ -190,7 +194,7 @@
         calculateValue();
     });
 
-    // ★ 위도/경도를 국토성 API가 요구하는 '타일 좌표(Z, X, Y)'로 변환하는 핵심 공식 추가 ★
+    // 위도/경도를 국토성 타일 좌표로 변환 (줌 레벨 15 고정)
     function getTileCoordinate(lat, lon, zoom) {
         const x = Math.floor((lon + 180) / 360 * Math.pow(2, zoom));
         const latRad = lat * Math.PI / 180;
@@ -203,9 +207,11 @@
         const log = document.getElementById('api_log');
         if (!address) { alert('住所を入力してください。'); return; }
 
-        log.innerHTML = "🔄 座標を抽出中...<br>";
-        const geocoder = new google.maps.Geocoder();
+        log.style.display = "block";
+        log.innerHTML = "🔄 <b>Google Maps API</b>: 住所の座標を抽出中...<br>";
+        window.hazardPenalties = []; // 초기화
         
+        const geocoder = new google.maps.Geocoder();
         geocoder.geocode({ 'address': address }, function(results, status) {
             if (status === 'OK') {
                 const location = results[0].geometry.location;
@@ -213,31 +219,34 @@
                 const lng = location.lng();
                 
                 calculateStationDistance(location, log);
-                log.innerHTML += `✅ 座標取得成功 (Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)})<br>🔄 国土交通省から実際の地価データを取得中...<br>`;
+                log.innerHTML += `✅ 座標取得成功 (Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)})<br><hr style="border: 0.5px solid #ccc; margin:10px 0;">`;
                 
+                // 공시지가 및 재해 위험 구역 동시 조회
                 fetchMLITLandPrice(lat, lng, log);
+                checkHazards(lat, lng, log);
+
             } else {
-                log.innerHTML = "❌ 住所を認識できませんでした。"; log.style.color = "#d93025";
+                log.innerHTML += `<span style="color:#d93025">❌ 住所を認識できませんでした。</span>`;
             }
         });
     }
 
+    // 1. 공시지가 불러오기 함수
     async function fetchMLITLandPrice(lat, lng, log) {
         const currentYear = new Date().getFullYear();
         let prices = [];
         let labels = [];
         
+        log.innerHTML += `🔄 <b>国土交通省API</b>: 過去5年間の地価データを取得中...<br>`;
+        const tile = getTileCoordinate(lat, lng, 15);
+
         try {
-            log.innerHTML += `<span style="color:#f9ab00;">※ 国土交通省APIへ接続中 (タイル座標変換・Proxy経由)...</span><br>`;
-
-            // 국토성 데이터 조회를 위해 줌 레벨 15의 타일 좌표 획득
-            const tile = getTileCoordinate(lat, lng, 15);
-
             for (let i = 4; i >= 0; i--) {
                 const targetYear = currentYear - i;
-                // 타일 좌표(z/x/y)가 포함된 완벽한 국토성 API URL
                 const targetUrl = `https://www.reinfolib.mlit.go.jp/ex-api/external/XPT002/${tile.z}/${tile.x}/${tile.y}?year=${targetYear}&response_format=geojson`;
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+                
+                // ★ 새로운 프록시 서버 적용 (헤더를 안전하게 전달) ★
+                const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`;
                 
                 const response = await fetch(proxyUrl, {
                     method: 'GET',
@@ -249,25 +258,19 @@
                     let extractedPrice = 0; 
                     
                     if (data.features && data.features.length > 0) {
-                        // 공공데이터 속성 이름이 L01_006 이거나 price 일 수 있으므로 방어적 로직 적용
                         let props = data.features[0].properties;
                         extractedPrice = props.price || props.L01_006 || props.L02_006 || 0;
-
-                        // 만약 위 이름으로도 못 찾았다면, 1000 이상의 큰 숫자 데이터를 무조건 가격으로 추출
                         if (!extractedPrice) {
                             for (let key in props) {
                                 if (typeof props[key] === 'number' && props[key] > 1000) {
-                                    extractedPrice = props[key];
-                                    break;
+                                    extractedPrice = props[key]; break;
                                 }
                             }
                         }
                     }
 
-                    // 해당 타일에 데이터가 없으면 전년도 가격 유지
-                    if (extractedPrice === 0 && prices.length > 0) {
-                        extractedPrice = prices[prices.length - 1]; 
-                    } else if (extractedPrice === 0) {
+                    if (extractedPrice === 0 && prices.length > 0) extractedPrice = prices[prices.length - 1]; 
+                    else if (extractedPrice === 0) {
                         const areaType = document.getElementById('area').value;
                         extractedPrice = areaType === 'tokyo_osaka' ? 1200000 : 150000;
                     }
@@ -280,19 +283,63 @@
             }
 
             drawTrendChart(prices, labels);
-            log.innerHTML += `✅ <b>国土交通省</b>の過去5年間の実データ取得・反映完了！`;
+            log.innerHTML += `✅ <b>地価推移</b>: 実データ取得完了！<br>`;
             
             document.getElementById('land_price_info').innerHTML = `💡 取得した最新の公示地価は <b>¥${prices[prices.length-1].toLocaleString()}/㎡</b> です。`;
             document.getElementById('land_price_info').style.color = "#d93025";
 
         } catch (error) {
-            log.innerHTML += `❌ 国土交通省APIの直接取得が制限されています。シミュレーションデータを表示します。<br>`;
-            
+            log.innerHTML += `<span style="color:#f9ab00;">⚠️ 地価APIの直接取得制限。シミュレーションで代用します。</span><br>`;
             const areaType = document.getElementById('area').value;
             let mockPrices = areaType === 'tokyo_osaka' ? [1250000, 1280000, 1310000, 1360000, 1420000] : [150000, 148000, 145000, 144000, 142000];
             const fallbackLabels = [currentYear-4+'年', currentYear-3+'年', currentYear-2+'年', currentYear-1+'年', currentYear+'年'];
             drawTrendChart(mockPrices, fallbackLabels);
         }
+    }
+
+    // ★ 2. 해저드 맵(재해 구역) 불러오기 및 공간 분석(Turf.js) 함수 ★
+    async function checkHazards(lat, lng, log) {
+        log.innerHTML += `🔄 <b>国土交通省API</b>: ハザードマップ(災害リスク)を解析中...<br>`;
+        const tile = getTileCoordinate(lat, lng, 15);
+        const pt = turf.point([lng, lat]); // 우리가 검색한 정확한 핀(Point)
+
+        const hazards = [
+            { id: 'XKT026', name: '洪水 (홍수 침수 구역)', penalty: 20 },
+            { id: 'XKT028', name: '津波 (쓰나미 침수 구역)', penalty: 20 },
+            { id: 'XKT025', name: '液状化 (액상화 위험 구역)', penalty: 10 }
+        ];
+
+        for (let h of hazards) {
+            const url = `https://www.reinfolib.mlit.go.jp/ex-api/external/${h.id}/${tile.z}/${tile.x}/${tile.y}?response_format=geojson`;
+            const proxyUrl = `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`;
+
+            try {
+                const res = await fetch(proxyUrl, { headers: { 'Ocp-Apim-Subscription-Key': MLIT_API_KEY } });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.features && data.features.length > 0) {
+                        // 타일 안에 다각형(Polygon)이 여러 개 있을 수 있으므로 모두 검사
+                        for (let feature of data.features) {
+                            if (feature.geometry && (feature.geometry.type === 'Polygon' || feature.geometry.type === 'MultiPolygon')) {
+                                // Turf.js를 사용해 내 핀(pt)이 다각형(feature) 안에 들어있는지 수학적 판별!
+                                if (turf.booleanPointInPolygon(pt, feature)) {
+                                    window.hazardPenalties.push(h);
+                                    log.innerHTML += `<span style="color:#d93025;">🚨 <b>${h.name}</b> エリアに該当しています！(-${h.penalty}点)</span><br>`;
+                                    break; // 한 번 발견되면 해당 재해는 확정이므로 다음 재해로 넘어감
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch(e) {
+                console.log(`Hazard ${h.id} fetch error`, e);
+            }
+        }
+        
+        if(window.hazardPenalties.length === 0) {
+            log.innerHTML += `<span style="color:#1e8e3e;">✅ <b>ハザードリスク</b>: 該当なし (安全)</span><br>`;
+        }
+        calculateValue(); // 재해 결과가 나왔으니 최종 점수 재계산!
     }
 
     function calculateStationDistance(location, log) {
@@ -307,7 +354,7 @@
                     if (distStatus === 'OK' && distResponse.rows[0].elements[0].status === 'OK') {
                         let walkMinutes = Math.ceil(distResponse.rows[0].elements[0].duration.value / 60);
                         document.getElementById('station_dist').value = walkMinutes > 50 ? 50 : walkMinutes;
-                        log.innerHTML += `<br>✅ 最寄駅 [${nearestStation.name}] 徒歩 ${walkMinutes} 分`;
+                        log.innerHTML += `✅ <b>駅徒歩</b>: 最寄駅 [${nearestStation.name}] 徒歩 ${walkMinutes} 分<br>`;
                         calculateValue();
                     }
                 });
@@ -408,6 +455,14 @@
             const rentGap = ((totalMarketRent - currentRent) / currentRent) * 100;
             if (rentGap >= 5) { score += 10; feedbacks.push({ msg: `【魅力】 賃料アップ余地(${rentGap.toFixed(1)}%)があります。`, type: "good" }); }
             else if (rentGap <= -5) { score -= 15; feedbacks.push({ msg: `【リスク】 現状家賃が相場より割高です。`, type: "alert" }); }
+        }
+
+        // ★ 해저드 맵 감점 로직 적용 ★
+        if (window.hazardPenalties && window.hazardPenalties.length > 0) {
+            for (let h of window.hazardPenalties) {
+                score -= h.penalty;
+                feedbacks.push({ msg: `【災害リスク】 ${h.name} に該当します (-${h.penalty}点)`, type: "alert" });
+            }
         }
 
         const statusEl = document.getElementById('final_status');
